@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List, Set
+from typing import List, Set, Optional
 from pathlib import Path
 from tree_sitter import Tree, Node, Language
 import tree_sitter_python

@@ -428,6 +428,12 @@ cat ./test_output/performance-metrics.json
 - LLM summarization: >1000 nodes/sec
 - Search latency: <200ms per query
 
+**Metrics to Verify**:
+- Phase timings (scan, parse, graph, summarize, index)
+- Memory usage per phase
+- Batch processing efficiency (nodes per LLM call)
+- Search accuracy (manual spot-checks of top-10 results)
+
 ### Manual Verification
 
 After automated tests pass, perform manual validation:

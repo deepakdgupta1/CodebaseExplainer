@@ -1,0 +1,49 @@
+system:
+  max_memory_gb: 12.0
+  temp_dir: ".codehierarchy/temp"
+  output_dir: "output"
+  checkpointing_enabled: true
+  checkpoint_interval: 100
+
+parsing:
+  languages:
+    - "python"
+    - "typescript"
+  num_workers: 6
+  timeout_seconds: 60
+  max_file_size_mb: 10.0
+  exclude_patterns:
+    - "**/node_modules/**"
+    - "**/venv/**"
+    - "**/__pycache__/**"
+    - "**/.git/**"
+    - "**/dist/**"
+    - "**/build/**"
+    - "**/*.min.js"
+    - "**/*.test.ts"
+    - "**/tests/**"
+
+graph:
+  storage_mode: "in_memory"
+  cache_size_gb: 2.0
+  compute_metrics: true
+
+llm:
+  model_name: "deepseek-coder-v2:16b-q4_K_M"
+  context_window: 128000
+  batch_size: 20
+  temperature: 0.2
+  num_thread: 8
+  timeout_seconds: 300
+  max_retries: 2
+
+embeddings:
+  model_name: "all-mpnet-base-v2"
+  dimension: 768
+  batch_size: 32
+
+search:
+  default_mode: "hybrid"
+  index_type: "IVF256,Flat"
+  nprobe: 64
+  rrf_k: 60

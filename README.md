@@ -21,21 +21,41 @@ CodeHierarchy Explainer analyzes your codebase to generate comprehensive documen
 
 ## Installation
 
+### Quick Setup (Recommended)
+
+Use the provided setup script to create a virtual environment and install all dependencies:
+
+```bash
+git clone https://github.com/yourusername/codehierarchy-explainer.git
+cd codehierarchy-explainer
+./setup_venv.sh
+```
+
+### Manual Setup
+
 1. Clone the repository:
    ```bash
    git clone https://github.com/yourusername/codehierarchy-explainer.git
    cd codehierarchy-explainer
    ```
 
-2. Install dependencies:
+2. Create and activate a virtual environment:
+   ```bash
+   python3 -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   ```
+
+3. Install the package:
    ```bash
    pip install -e .
    ```
 
-3. Install Ollama and pull the model:
+4. Install Ollama and pull the model:
    ```bash
    ollama pull deepseek-coder-v2:16b-q4_K_M
    ```
+
+**Note**: All configuration files are now bundled within the package. No external config directory is needed.
 
 ## Quick Start
 

@@ -52,7 +52,7 @@ cd codehierarchy-explainer
 
 4. Install Ollama and pull the model:
    ```bash
-   ollama pull deepseek-coder-v2:16b-q4_K_M
+   ollama pull deepseek-coder-v2
    ```
 
 **Note**: All configuration files are now bundled within the package. No external config directory is needed.

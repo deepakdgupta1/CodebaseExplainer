@@ -7,9 +7,7 @@ from .result import Result
 
 __all__ = [
     "HighQualityEmbedder",
-    "Embedder",
     "KeywordSearch",
     "EnterpriseSearchEngine",
-    "SearchEngine",
     "Result",
 ]

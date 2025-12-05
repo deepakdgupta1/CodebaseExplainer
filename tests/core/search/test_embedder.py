@@ -18,7 +18,7 @@ def embedder():
 from unittest.mock import patch, MagicMock
 
 def test_encode_batch():
-    with patch('codehierarchy.search.embedder.SentenceTransformer') as MockST:
+    with patch('codehierarchy.core.search.embedder.SentenceTransformer') as MockST:
         mock_model = MockST.return_value
         # Mock encode to return numpy array
         mock_model.encode.return_value = np.zeros((1, 768), dtype='float32')
@@ -30,7 +30,7 @@ def test_encode_batch():
         mock_model.encode.assert_called_once()
 
 def test_build_index():
-    with patch('codehierarchy.search.embedder.SentenceTransformer') as MockST:
+    with patch('codehierarchy.core.search.embedder.SentenceTransformer') as MockST:
         mock_model = MockST.return_value
         mock_model.encode.return_value = np.random.rand(5, 768).astype('float32')
         

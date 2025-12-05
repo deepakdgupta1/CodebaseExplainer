@@ -15,8 +15,8 @@ def search_engine(tmp_path):
 from unittest.mock import MagicMock, patch
 
 def test_hybrid_search_logic():
-    with patch('codehierarchy.search.search_engine.HighQualityEmbedder') as MockEmbedder, \
-         patch('codehierarchy.search.search_engine.KeywordSearch') as MockKeyword:
+    with patch('codehierarchy.core.search.search_engine.HighQualityEmbedder') as MockEmbedder, \
+         patch('codehierarchy.core.search.search_engine.KeywordSearch') as MockKeyword:
         
         # Setup mocks
         mock_embedder = MockEmbedder.return_value

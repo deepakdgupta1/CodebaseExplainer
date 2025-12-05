@@ -30,9 +30,9 @@ from codehierarchy.analysis.parser import (
 from codehierarchy.analysis.scanner import FileScanner
 from codehierarchy.analysis.graph import InMemoryGraphBuilder
 
-from codehierarchy.core.pipeline import Orchestrator
-from codehierarchy.core.llm import DeepSeekSummarizer
-from codehierarchy.core.search import (
+from codehierarchy.core import (
+    Orchestrator,
+    DeepSeekSummarizer,
     HighQualityEmbedder,
     EnterpriseSearchEngine,
     KeywordSearch,
@@ -41,8 +41,8 @@ from codehierarchy.core.search import (
 from codehierarchy.interface.cli import main
 from codehierarchy.interface.output import MarkdownGenerator
 
-from codehierarchy.config import Config, ConfigLoader
-from codehierarchy.utils import setup_logger, Profiler, detect_language
+from codehierarchy.config import Config, load_config
+from codehierarchy.utils import setup_logging, Profiler, detect_language
 
 __all__ = [
     # Version
@@ -69,8 +69,8 @@ __all__ = [
     
     # Config & Utils
     "Config",
-    "ConfigLoader",
-    "setup_logger",
+    "load_config",
+    "setup_logging",
     "Profiler",
     "detect_language",
 ]

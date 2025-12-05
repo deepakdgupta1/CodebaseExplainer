@@ -4,7 +4,7 @@ from .tree_sitter_parser import TreeSitterParser
 from .parallel_parser import ParallelParser, ParseResult
 from .node_extractor import NodeExtractor, NodeInfo
 from .call_graph_analyzer import CallGraphAnalyzer, Edge
-from .complexity import calculate_complexity
+from .complexity import compute_cyclomatic_complexity
 
 __all__ = [
     "TreeSitterParser",
@@ -14,5 +14,5 @@ __all__ = [
     "NodeInfo",
     "CallGraphAnalyzer",
     "Edge",
-    "calculate_complexity",
+    "compute_cyclomatic_complexity",
 ]

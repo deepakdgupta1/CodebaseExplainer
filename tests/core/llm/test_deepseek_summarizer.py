@@ -1,11 +1,12 @@
 import pytest
-from unittest.mock import Mock, patch
+import pytest
+from unittest.mock import Mock, patch, MagicMock
 from codehierarchy.core.llm.deepseek_summarizer import DeepSeekSummarizer
 from codehierarchy.config.schema import LLMConfig
 
 @pytest.fixture
 def mock_ollama():
-    with patch('codehierarchy.llm.deepseek_summarizer.ollama') as mock:
+    with patch('codehierarchy.core.llm.deepseek_summarizer.ollama') as mock:
         yield mock
 
 def test_summarize_batch(mock_ollama):
@@ -25,14 +26,14 @@ def test_summarize_batch(mock_ollama):
     # Mock LLM response
     mock_ollama.chat.return_value = {
         'message': {
-            'content': "[test.py:test:1] This is a summary."
+            'content': "[test.py:test:1] This is a very long summary for the test function that should definitely pass the minimum length check of fifty characters."
         }
     }
     
     summaries = summarizer.summarize_batch(["test.py:test:1"], builder)
     
     assert len(summaries) == 1
-    assert summaries["test.py:test:1"] == "This is a summary."
+    assert summaries["test.py:test:1"] == "This is a very long summary for the test function that should definitely pass the minimum length check of fifty characters."
     
 def test_parse_batch_response():
     config = LLMConfig()

@@ -1,27 +1,73 @@
 """
 Tests for CLI module.
-
-TODO: Implement comprehensive tests for:
-- Command parsing and validation
-- Argument handling
-- Error messages
-- Help text generation
 """
 
 import pytest
 from click.testing import CliRunner
+from unittest.mock import patch, MagicMock
+from codehierarchy.interface.cli.cli import cli
 
+@pytest.fixture
+def runner():
+    return CliRunner()
 
-class TestCLI:
-    """Test suite for CLI functionality."""
+def test_help(runner):
+    """Test that help command works."""
+    result = runner.invoke(cli, ['--help'])
+    assert result.exit_code == 0
+    assert "CodeHierarchy Explainer CLI" in result.output
+
+@patch('codehierarchy.interface.cli.cli.load_config')
+@patch('codehierarchy.interface.cli.cli.Orchestrator')
+def test_analyze_command(MockOrchestrator, MockLoadConfig, runner, tmp_path):
+    """Test analyze command execution."""
+    mock_orchestrator = MockOrchestrator.return_value
     
-    def test_placeholder(self):
-        """Placeholder test to ensure test discovery works."""
-        assert True, "Placeholder test - implement actual tests"
+    mock_graph = MagicMock()
+    mock_graph.number_of_nodes.return_value = 10
     
-    # TODO: Add tests for:
-    # - test_analyze_command()
-    # - test_search_command()
-    # - test_config_validation()
-    # - test_help_text()
-    # - test_error_handling()
+    mock_orchestrator.run_pipeline.return_value = {"graph": mock_graph, "summaries": {}}
+    
+    # Mock config
+    MockLoadConfig.return_value = MagicMock()
+    MockLoadConfig.return_value.system.output_dir = tmp_path
+    
+    # Create a dummy directory to analyze
+    target_dir = tmp_path / "target"
+    target_dir.mkdir()
+    
+    result = runner.invoke(cli, ['analyze', str(target_dir), '--output', str(tmp_path)], catch_exceptions=False)
+    
+    print(f"CLI Output: {result.output}")
+    assert result.exit_code == 0
+    assert "Analysis complete" in result.output
+    mock_orchestrator.run_pipeline.assert_called_once()
+
+@patch('codehierarchy.interface.cli.cli.Orchestrator')
+def test_analyze_command_invalid_path(MockOrchestrator, runner):
+    """Test analyze command with invalid path."""
+    result = runner.invoke(cli, ['analyze', '/non/existent/path'])
+    
+    assert result.exit_code != 0
+    assert "Error" in result.output
+
+@patch('codehierarchy.interface.cli.cli.EnterpriseSearchEngine')
+def test_search_command(MockSearchEngine, runner, tmp_path):
+    """Test search command execution."""
+    mock_result = MagicMock()
+    mock_result.name = "test_node"
+    mock_result.score = 0.9
+    mock_result.file = "test.py"
+    mock_result.summary = "test content summary"
+    
+    mock_engine = MockSearchEngine.return_value
+    mock_engine.search.return_value = [mock_result]
+    
+    # Create dummy index files
+    (tmp_path / "codebase_index.faiss").touch()
+    (tmp_path / "metadata.pkl").touch()
+    
+    result = runner.invoke(cli, ['search', 'query', '--index-dir', str(tmp_path)])
+    
+    assert result.exit_code == 0
+    assert "test_node" in result.output

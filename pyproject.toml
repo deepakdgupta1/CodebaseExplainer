@@ -42,7 +42,7 @@ dev = [
 ]
 
 [project.scripts]
-codehierarchy = "codehierarchy.cli.cli:main"
+codehierarchy = "codehierarchy.interface.cli.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

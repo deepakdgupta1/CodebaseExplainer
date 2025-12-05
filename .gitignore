@@ -23,6 +23,7 @@ share/python-wheels/
 MANIFEST
 
 # Virtual Environments
+# NOTE: If venv/ exists in your clone, remove it manually with: rm -rf venv/
 .env
 .venv
 env/
@@ -40,6 +41,7 @@ htmlcov/
 
 # Project specific
 .codehierarchy/
+/output/
 test_output/
 demo_output/
 *.log

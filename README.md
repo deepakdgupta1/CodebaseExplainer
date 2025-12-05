@@ -102,15 +102,59 @@ codehierarchy analyze /path/to/repo --config my_config.yaml
 
 ## Architecture
 
-The system consists of a pipeline:
-1. **Scanner**: Finds relevant files.
-2. **Parser**: Extracts AST nodes (classes, functions) and call graph.
-3. **Graph Builder**: Constructs an in-memory graph of components.
-4. **Summarizer**: Batches nodes and sends them to DeepSeek LLM.
-5. **Indexer**: Embeds summaries and builds FAISS/SQLite indices.
-6. **Generator**: Produces Markdown documentation.
+The system is organized into functional groups for better maintainability:
 
-## Performance
+### Package Structure
+
+```
+codehierarchy/
+├── analysis/           # Code analysis and parsing
+│   ├── parser/        # AST parsing with Tree-sitter
+│   ├── scanner/       # File system scanning
+│   └── graph/         # Dependency graph construction
+├── core/              # Core pipeline functionality
+│   ├── pipeline/      # Orchestration logic
+│   ├── llm/           # LLM integration and summarization
+│   └── search/        # Semantic and keyword search
+├── interface/         # User-facing interfaces
+│   ├── cli/           # Command-line interface
+│   └── output/        # Markdown and report generation
+├── config/            # Configuration management
+└── utils/             # Shared utilities
+```
+
+### Pipeline Flow
+
+1. **Scanner**: Discovers relevant files using `analysis.scanner`
+2. **Parser**: Extracts AST nodes and call graphs using `analysis.parser`
+3. **Graph Builder**: Constructs dependency graph using `analysis.graph`
+4. **Summarizer**: Generates AI summaries using `core.llm`
+5. **Indexer**: Builds search indices using `core.search`
+6. **Generator**: Produces documentation using `interface.output`
+
+### Import Examples
+
+```python
+# New structure imports
+from codehierarchy.analysis.parser import TreeSitterParser
+from codehierarchy.core.llm import DeepSeekSummarizer
+from codehierarchy.interface.cli import main
+
+# Backward-compatible imports (convenience)
+from codehierarchy import TreeSitterParser, DeepSeekSummarizer
+```
+
+## Installation
+
+### Quick Setup (Recommended)
+
+Use the provided setup script to create a virtual environment and install all dependencies:
+
+```bash
+git clone https://github.com/yourusername/codehierarchy-explainer.git
+cd codehierarchy-explainer
+./scripts/setup_venv.sh
+```
 
 | Metric | Target |
 |--------|--------|

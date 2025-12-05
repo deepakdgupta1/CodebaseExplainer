@@ -1,6 +1,6 @@
 import pytest
 from pathlib import Path
-from codehierarchy.pipeline.orchestrator import Orchestrator
+from codehierarchy.core.pipeline.orchestrator import Orchestrator
 from codehierarchy.config.schema import Config
 
 # Integration test requires real components or heavy mocking.

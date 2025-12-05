@@ -1,5 +1,5 @@
 system:
-  max_memory_gb: 12.0
+  max_memory_gb: 26.0
   temp_dir: ".codehierarchy/temp"
   output_dir: "output"
   checkpointing_enabled: true
@@ -29,7 +29,7 @@ graph:
   compute_metrics: true
 
 llm:
-  model_name: "deepseek-coder-v2:16b-q4_K_M"
+  model_name: "qwen2.5-coder-32b-custom"
   context_window: 128000
   batch_size: 20
   temperature: 0.2

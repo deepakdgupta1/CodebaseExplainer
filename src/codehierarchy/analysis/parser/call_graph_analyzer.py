@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import List, Set, Optional
 from pathlib import Path
-from tree_sitter import Tree, Node, Language
+from tree_sitter import Tree, Node, Language, Query, QueryCursor
 import tree_sitter_python
 import tree_sitter_typescript
 
@@ -33,7 +33,7 @@ class CallGraphAnalyzer:
                 """,
                 'import': """
                     (import_statement name: (dotted_name) @module)
-                    (from_import_statement module_name: (dotted_name) @module)
+                    (import_from_statement module_name: (dotted_name) @module)
                 """,
                 'inheritance': """
                     (class_definition superclasses: (argument_list (identifier) @parent))
@@ -61,46 +61,56 @@ class CallGraphAnalyzer:
         queries = self.queries[self.language]
         
         # Analyze calls
-        call_query = self.lang.query(queries['call'])
-        for node, _ in call_query.captures(tree.root_node):
-            target_name = node.text.decode('utf-8')
-            # Source is the enclosing function/method/class
-            source_name = self._find_enclosing_scope(node)
-            edges.append(Edge(
-                source=source_name,
-                target=target_name,
-                type='call',
-                confidence=1.0
-            ))
+        call_query = Query(self.lang, queries['call'])
+        call_cursor = QueryCursor(call_query)
+        call_captures = call_cursor.captures(tree.root_node)
+        # Captures is now a dict: {capture_name: [nodes]}
+        for capture_name, nodes_list in call_captures.items():
+            for node in nodes_list:
+                target_name = node.text.decode('utf-8')
+                # Source is the enclosing function/method/class
+                source_name = self._find_enclosing_scope(node)
+                edges.append(Edge(
+                    source=source_name,
+                    target=target_name,
+                    type='call',
+                    confidence=1.0
+                ))
             
         # Analyze imports
-        import_query = self.lang.query(queries['import'])
-        for node, _ in import_query.captures(tree.root_node):
-            module_name = node.text.decode('utf-8').strip("'\"")
-            edges.append(Edge(
-                source=str(file),
-                target=module_name,
-                type='import',
-                confidence=0.8
-            ))
+        import_query = Query(self.lang, queries['import'])
+        import_cursor = QueryCursor(import_query)
+        import_captures = import_cursor.captures(tree.root_node)
+        for capture_name, nodes_list in import_captures.items():
+            for node in nodes_list:
+                module_name = node.text.decode('utf-8').strip("'\"")
+                edges.append(Edge(
+                    source=str(file),
+                    target=module_name,
+                    type='import',
+                    confidence=0.8
+                ))
             
         # Analyze inheritance
-        inherit_query = self.lang.query(queries['inheritance'])
-        for node, _ in inherit_query.captures(tree.root_node):
-            parent_name = node.text.decode('utf-8')
-            # Source is the class being defined
-            # The capture is the parent identifier, so we need to find the class def
-            class_node = self._find_parent_of_type(node, ['class_definition', 'class_declaration'])
-            if class_node:
-                class_name_node = class_node.child_by_field_name('name')
-                if class_name_node:
-                    class_name = class_name_node.text.decode('utf-8')
-                    edges.append(Edge(
-                        source=class_name,
-                        target=parent_name,
-                        type='inheritance',
-                        confidence=0.9
-                    ))
+        inherit_query = Query(self.lang, queries['inheritance'])
+        inherit_cursor = QueryCursor(inherit_query)
+        inherit_captures = inherit_cursor.captures(tree.root_node)
+        for capture_name, nodes_list in inherit_captures.items():
+            for node in nodes_list:
+                parent_name = node.text.decode('utf-8')
+                # Source is the class being defined
+                # The capture is the parent identifier, so we need to find the class def
+                class_node = self._find_parent_of_type(node, ['class_definition', 'class_declaration'])
+                if class_node:
+                    class_name_node = class_node.child_by_field_name('name')
+                    if class_name_node:
+                        class_name = class_name_node.text.decode('utf-8')
+                        edges.append(Edge(
+                            source=class_name,
+                            target=parent_name,
+                            type='inheritance',
+                            confidence=0.9
+                        ))
                     
         return edges
 

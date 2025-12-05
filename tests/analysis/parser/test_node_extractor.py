@@ -6,19 +6,27 @@ from codehierarchy.analysis.parser.node_extractor import NodeExtractor
 def mock_dependencies():
     with patch('codehierarchy.analysis.parser.node_extractor.tree_sitter_python') as mock_py, \
          patch('codehierarchy.analysis.parser.node_extractor.tree_sitter_typescript') as mock_ts, \
-         patch('codehierarchy.analysis.parser.node_extractor.Language') as mock_lang:
+         patch('codehierarchy.analysis.parser.node_extractor.Language') as mock_lang, \
+         patch('codehierarchy.analysis.parser.node_extractor.Query') as mock_query_class, \
+         patch('codehierarchy.analysis.parser.node_extractor.QueryCursor') as mock_cursor_class:
         
         mock_py.language.return_value = 1
         mock_ts.language_typescript.return_value = 2
         
-        # Setup mock language object to return mock query
+        # Setup mock language object
         mock_language_instance = MagicMock()
         mock_lang.return_value = mock_language_instance
         
+        # Setup mock Query class to return mock query instance
         mock_query = MagicMock()
-        mock_language_instance.query.return_value = mock_query
+        mock_query_class.return_value = mock_query
         
-        yield mock_query
+        # Setup mock QueryCursor to return mock cursor instance
+        mock_cursor = MagicMock()
+        mock_cursor_class.return_value = mock_cursor
+        
+        # Yield the mock cursor so tests can configure captures on it
+        yield mock_cursor
 
 @pytest.fixture
 def extractor(mock_dependencies):
@@ -26,7 +34,7 @@ def extractor(mock_dependencies):
 
 def test_extract_python_function(extractor, mock_dependencies):
     code = b"def my_func(): pass"
-    mock_query = mock_dependencies
+    mock_cursor = mock_dependencies
     
     mock_tree = MagicMock()
     
@@ -59,8 +67,8 @@ def test_extract_python_function(extractor, mock_dependencies):
     
     mock_node.id = 1
     
-    # Mock query.captures return value
-    mock_query.captures.return_value = [(mock_node, 'function')]
+    # Mock cursor.captures return value (dict format: {capture_name: [nodes]})
+    mock_cursor.captures.return_value = {'function': [mock_node]}
     
     nodes = extractor.extract_all_nodes(mock_tree, 'python', code)
     
@@ -70,7 +78,7 @@ def test_extract_python_function(extractor, mock_dependencies):
 
 def test_extract_python_class(extractor, mock_dependencies):
     code = b"class MyClass: pass"
-    mock_query = mock_dependencies
+    mock_cursor = mock_dependencies
     
     mock_tree = MagicMock()
     
@@ -101,7 +109,7 @@ def test_extract_python_class(extractor, mock_dependencies):
     
     class_node.id = 2
     
-    mock_query.captures.return_value = [(class_node, 'class')]
+    mock_cursor.captures.return_value = {'class': [class_node]}
     
     nodes = extractor.extract_all_nodes(mock_tree, 'python', code)
     
@@ -111,7 +119,7 @@ def test_extract_python_class(extractor, mock_dependencies):
 
 def test_extract_typescript_function(extractor, mock_dependencies):
     code = b"function tsFunc() {}"
-    mock_query = mock_dependencies
+    mock_cursor = mock_dependencies
     
     mock_tree = MagicMock()
     
@@ -142,7 +150,7 @@ def test_extract_typescript_function(extractor, mock_dependencies):
     
     func_node.id = 3
     
-    mock_query.captures.return_value = [(func_node, 'function')]
+    mock_cursor.captures.return_value = {'function': [func_node]}
     
     nodes = extractor.extract_all_nodes(mock_tree, 'typescript', code)
     
@@ -151,7 +159,7 @@ def test_extract_typescript_function(extractor, mock_dependencies):
 
 def test_extract_typescript_class_method(extractor, mock_dependencies):
     code = b"class TSClass { m() {} }"
-    mock_query = mock_dependencies
+    mock_cursor = mock_dependencies
     
     mock_tree = MagicMock()
     
@@ -209,10 +217,10 @@ def test_extract_typescript_class_method(extractor, mock_dependencies):
     
     method_node.id = 5
     
-    mock_query.captures.return_value = [
-        (class_node, 'class'),
-        (method_node, 'method')
-    ]
+    mock_cursor.captures.return_value = {
+        'class': [class_node],
+        'method': [method_node]
+    }
     
     nodes = extractor.extract_all_nodes(mock_tree, 'typescript', code)
     

@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from typing import List, Optional
-from tree_sitter import Tree, Node, Language
+from tree_sitter import Tree, Node, Language, Query, QueryCursor
 import tree_sitter_python
 import tree_sitter_typescript
 from .complexity import compute_cyclomatic_complexity, compute_loc
@@ -60,18 +60,22 @@ class NodeExtractor:
         if not query_str:
             return []
             
-        query = lang_obj.query(query_str)
-        captures = query.captures(tree.root_node)
+        query = Query(lang_obj, query_str)
+        cursor = QueryCursor(query)
+        captures_dict = cursor.captures(tree.root_node)
         
         nodes = []
-        # Captures is a list of (Node, str) tuples where str is the capture name
-        # We need to group by the main node (function, class, method)
+        # Captures is now a dict: {capture_name: [nodes]}
+        # We process main captures (function, class, method)
         
         # Helper to process a captured node
         processed_ids = set()
         
-        for node, capture_name in captures:
-            if capture_name in ['function', 'class', 'method']:
+        # Iterate through the relevant capture names
+        for capture_name in ['function', 'class', 'method']:
+            if capture_name not in captures_dict:
+                continue
+            for node in captures_dict[capture_name]:
                 if node.id in processed_ids:
                     continue
                 processed_ids.add(node.id)

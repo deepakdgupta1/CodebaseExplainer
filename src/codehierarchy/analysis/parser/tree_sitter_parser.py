@@ -28,7 +28,7 @@ class TreeSitterParser:
             else:
                 raise ValueError(f"Unsupported language: {language}")
                 
-            self.parser.set_language(self.lang)
+            self.parser.language = self.lang
             
         except Exception as e:
             raise RuntimeError(f"Failed to initialize tree-sitter for {language}: {e}")

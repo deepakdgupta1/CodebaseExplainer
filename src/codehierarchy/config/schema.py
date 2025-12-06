@@ -32,13 +32,26 @@ class GraphConfig(BaseModel):
     compute_metrics: bool = Field(default=True, description="Compute centrality and other metrics")
 
 class LLMConfig(BaseModel):
-    model_name: str = Field(default="deepseek-coder-v2:16b-q4_K_M", description="Ollama model tag")
-    context_window: int = Field(default=128000, description="Context window size in tokens")
-    batch_size: int = Field(default=20, description="Number of nodes per LLM call")
+    model_name: str = Field(default="Qwen2.5-Coder-32B-Instruct.IQ4_XS.gguf", description="Model name in LM Studio")
+    base_url: str = Field(default="http://localhost:1234/v1", description="LM Studio API base URL")
+    api_key: str = Field(default="lm-studio", description="API Key for LM Studio")
+    context_window: int = Field(default=32768, description="Context window size in tokens")
+    batch_size: int = Field(default=10, description="Number of nodes per LLM call")
     temperature: float = Field(default=0.2, description="Generation temperature")
-    num_thread: int = Field(default=8, description="Number of CPU threads for Ollama")
     timeout_seconds: int = Field(default=300, description="Timeout per batch in seconds")
     max_retries: int = Field(default=2, description="Max retries for failed calls")
+    
+    # Advanced LM Studio Settings
+    context_overflow_policy: Literal["stopAtLimit", "rollingWindow"] = Field(default="stopAtLimit", description="Context overflow policy")
+    top_k: int = Field(default=40, description="Top K sampling")
+    repeat_penalty: float = Field(default=1.1, description="Repeat penalty")
+    min_p: float = Field(default=0.05, description="Min P sampling")
+    top_p: float = Field(default=0.95, description="Top P sampling")
+    gpu_offload_ratio: float = Field(default=1.0, description="GPU Offload ratio (0.0 to 1.0)")
+    cpu_threads: int = Field(default=4, description="CPU Thread Pool Size")
+    eval_batch_size: int = Field(default=8, description="Evaluation Batch Size")
+    flash_attention: bool = Field(default=False, description="Use Flash Attention (KV Cache Offload)")
+    use_mmap: bool = Field(default=True, description="Use mmap()")
 
 class EmbeddingsConfig(BaseModel):
     model_name: str = Field(default="all-mpnet-base-v2", description="SentenceTransformer model name")

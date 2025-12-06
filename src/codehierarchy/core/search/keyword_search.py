@@ -9,7 +9,7 @@ class KeywordSearch:
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
         self._init_db()
 
-    def _init_db(self):
+    def _init_db(self) -> None:
         with sqlite3.connect(self.db_path) as conn:
             # Create FTS5 table
             conn.execute("""
@@ -17,7 +17,7 @@ class KeywordSearch:
                 USING fts5(node_id, name, file, content, tokenize='porter')
             """)
 
-    def index_data(self, summaries: Dict[str, str], nodes: Dict[str, Any]):
+    def index_data(self, summaries: Dict[str, str], nodes: Dict[str, Any]) -> None:
         """
         Index nodes and summaries into SQLite FTS5.
         """

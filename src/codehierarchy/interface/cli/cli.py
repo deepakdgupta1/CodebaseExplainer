@@ -8,7 +8,7 @@ from codehierarchy.interface.output.markdown_generator import MarkdownGenerator
 from codehierarchy.utils.logger import setup_logging
 
 @click.group()
-def cli():
+def cli() -> None:
     """CodeHierarchy Explainer CLI"""
     pass
 
@@ -17,7 +17,7 @@ def cli():
 @click.option('--config', 'config_path', type=click.Path(exists=True), help='Path to config file')
 @click.option('--output', 'output_dir', type=click.Path(), help='Output directory')
 @click.option('--verbose', is_flag=True, help='Enable verbose logging')
-def analyze(repo_path, config_path, output_dir, verbose):
+def analyze(repo_path: str, config_path: str, output_dir: str, verbose: bool) -> None:
     """Analyze a repository and generate documentation."""
     setup_logging(verbose)
     
@@ -45,7 +45,7 @@ def analyze(repo_path, config_path, output_dir, verbose):
 @click.argument('query')
 @click.option('--index-dir', type=click.Path(exists=True), required=True, help='Path to index directory')
 @click.option('--mode', type=click.Choice(['keyword', 'semantic', 'hybrid']), default='hybrid')
-def search(query, index_dir, mode):
+def search(query: str, index_dir: str, mode: str) -> None:
     """Search the codebase knowledge base."""
     try:
         engine = EnterpriseSearchEngine(Path(index_dir))
@@ -60,7 +60,7 @@ def search(query, index_dir, mode):
         print(f"\n❌ Error: {e}")
         sys.exit(1)
 
-def main():
+def main() -> None:
     cli()
 
 if __name__ == "__main__":

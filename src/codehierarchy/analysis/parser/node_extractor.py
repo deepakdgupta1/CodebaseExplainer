@@ -7,6 +7,9 @@ from .complexity import compute_cyclomatic_complexity, compute_loc
 
 @dataclass
 class NodeInfo:
+    """
+    Data class representing a code node (function, class, method).
+    """
     type: str
     name: str
     line: int
@@ -18,7 +21,10 @@ class NodeInfo:
     loc: int = 0
 
 class NodeExtractor:
-    def __init__(self):
+    """
+    Extracts code nodes (functions, classes) from source code using Tree-sitter.
+    """
+    def __init__(self) -> None:
         # Initialize languages for queries
         self.langs = {
             'python': Language(tree_sitter_python.language()),
@@ -82,7 +88,9 @@ class NodeExtractor:
                 
                 # Extract details
                 name_node = node.child_by_field_name('name')
-                name = source_bytes[name_node.start_byte:name_node.end_byte].decode('utf-8') if name_node else "anonymous"
+                name = "anonymous"
+                if name_node:
+                    name = source_bytes[name_node.start_byte:name_node.end_byte].decode('utf-8')
                 
                 source = source_bytes[node.start_byte:node.end_byte].decode('utf-8')
                 
@@ -115,9 +123,9 @@ class NodeExtractor:
             body = node.child_by_field_name('body')
             if body and body.child_count > 0:
                 first_stmt = body.child(0)
-                if first_stmt.type == 'expression_statement':
+                if first_stmt and first_stmt.type == 'expression_statement':
                     expr = first_stmt.child(0)
-                    if expr.type == 'string':
+                    if expr and expr.type == 'string':
                         return source_bytes[expr.start_byte:expr.end_byte].decode('utf-8').strip('"""\'\'\'')
         # TypeScript JSDoc usually precedes the node, tree-sitter might capture it if we look at previous sibling
         # For now, simplified: return None for TS or implement complex logic later

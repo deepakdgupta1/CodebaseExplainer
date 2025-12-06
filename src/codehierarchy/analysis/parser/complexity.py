@@ -60,7 +60,7 @@ def compute_cyclomatic_complexity(node: Node, language: str) -> int:
         }
     
     # Recursive traversal
-    def traverse(n: Node):
+    def traverse(n: Node) -> None:
         nonlocal complexity
         if n.type in branching_types:
             # For binary expressions in TS/JS, checks if operator is && or ||

@@ -8,7 +8,7 @@ class MarkdownGenerator:
         self.output_dir = output_dir
         self.output_dir.mkdir(parents=True, exist_ok=True)
         
-    def generate_documentation(self, graph: nx.DiGraph, summaries: Dict[str, str]):
+    def generate_documentation(self, graph: nx.DiGraph, summaries: Dict[str, str]) -> None:
         """
         Generate markdown documentation from graph and summaries.
         """

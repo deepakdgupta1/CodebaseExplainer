@@ -14,7 +14,7 @@ from codehierarchy.core.search import *
 __all__ = [
     # Re-export key classes for convenience
     "Orchestrator",
-    "DeepSeekSummarizer",
+    "LMStudioSummarizer",
     "Embedder",
     "SearchEngine",
     "KeywordSearch",

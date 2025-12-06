@@ -2,11 +2,11 @@ import psutil
 import time
 import json
 from pathlib import Path
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 import logging
 
 class Profiler:
-    def __init__(self):
+    def __init__(self) -> None:
         self.metrics: Dict[str, Any] = {
             'phases': {},
             'total_time': 0,
@@ -14,14 +14,14 @@ class Profiler:
         }
         self.start_time = time.time()
         
-    def start_phase(self, phase_name: str):
+    def start_phase(self, phase_name: str) -> None:
         self.metrics['phases'][phase_name] = {
             'start_time': time.time(),
             'start_memory_mb': self._get_memory_mb()
         }
         logging.info(f"Starting phase: {phase_name}")
         
-    def end_phase(self, phase_name: str, extra_metrics: Dict[str, Any] = None):
+    def end_phase(self, phase_name: str, extra_metrics: Optional[Dict[str, Any]] = None) -> None:
         if phase_name not in self.metrics['phases']:
             return
             
@@ -41,7 +41,7 @@ class Profiler:
         # Update peak
         self.metrics['peak_memory_mb'] = max(self.metrics['peak_memory_mb'], end_memory)
 
-    def save_metrics(self, path: Path):
+    def save_metrics(self, path: Path) -> None:
         self.metrics['total_time'] = time.time() - self.start_time
         with open(path, 'w') as f:
             json.dump(self.metrics, f, indent=2)

@@ -21,7 +21,7 @@ def test_pipeline_end_to_end(test_repo, tmp_path):
     config.system.output_dir = tmp_path / "output"
     
     # Mock LLM and Embedder to be fast
-    with patch('codehierarchy.core.pipeline.orchestrator.DeepSeekSummarizer') as MockSummarizer, \
+    with patch('codehierarchy.core.pipeline.orchestrator.LMStudioSummarizer') as MockSummarizer, \
          patch('codehierarchy.core.pipeline.orchestrator.HighQualityEmbedder') as MockEmbedder, \
          patch('codehierarchy.core.pipeline.orchestrator.ParallelParser') as MockParser:
     

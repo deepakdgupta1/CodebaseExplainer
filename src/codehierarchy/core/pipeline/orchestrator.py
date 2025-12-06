@@ -7,7 +7,7 @@ from codehierarchy.config.schema import Config
 from codehierarchy.analysis.scanner.file_scanner import FileScanner
 from codehierarchy.analysis.parser.parallel_parser import ParallelParser
 from codehierarchy.analysis.graph.graph_builder import InMemoryGraphBuilder
-from codehierarchy.core.llm.deepseek_summarizer import DeepSeekSummarizer
+from codehierarchy.core.llm.deepseek_summarizer import LMStudioSummarizer
 from codehierarchy.core.search.embedder import HighQualityEmbedder
 from codehierarchy.core.search.keyword_search import KeywordSearch
 from codehierarchy.utils.profiler import Profiler
@@ -52,7 +52,7 @@ class Orchestrator:
         # Phase 4: Summarize
         self.profiler.start_phase("summarize")
         prompt = load_prompt_template("deepseek-optimized")
-        summarizer = DeepSeekSummarizer(self.config.llm, prompt)
+        summarizer = LMStudioSummarizer(self.config.llm, prompt)
         
         node_ids = list(graph.nodes())
         summaries = {}

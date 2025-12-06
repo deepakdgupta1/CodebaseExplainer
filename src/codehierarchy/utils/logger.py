@@ -1,7 +1,7 @@
 import logging
 from rich.logging import RichHandler
 
-def setup_logging(verbose: bool = False):
+def setup_logging(verbose: bool = False) -> None:
     """
     Configure logging with Rich handler.
     """

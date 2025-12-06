@@ -1,17 +1,17 @@
 import pytest
-import pytest
 from unittest.mock import Mock, patch, MagicMock
-from codehierarchy.core.llm.deepseek_summarizer import DeepSeekSummarizer
+from codehierarchy.core.llm.deepseek_summarizer import LMStudioSummarizer
 from codehierarchy.config.schema import LLMConfig
 
 @pytest.fixture
-def mock_ollama():
-    with patch('codehierarchy.core.llm.deepseek_summarizer.ollama') as mock:
+def mock_openai():
+    with patch('codehierarchy.core.llm.deepseek_summarizer.OpenAI') as mock:
         yield mock
 
-def test_summarize_batch(mock_ollama):
+def test_summarize_batch(mock_openai):
     config = LLMConfig()
-    summarizer = DeepSeekSummarizer(config, "System Prompt")
+    with patch('codehierarchy.core.llm.deepseek_summarizer.ModelManager') as MockManager:
+        summarizer = LMStudioSummarizer(config, "System Prompt")
     
     # Mock builder and context
     builder = MagicMock()
@@ -24,11 +24,10 @@ def test_summarize_batch(mock_ollama):
     }
     
     # Mock LLM response
-    mock_ollama.chat.return_value = {
-        'message': {
-            'content': "[test.py:test:1] This is a very long summary for the test function that should definitely pass the minimum length check of fifty characters."
-        }
-    }
+    mock_client = mock_openai.return_value
+    mock_response = MagicMock()
+    mock_response.choices[0].message.content = "[test.py:test:1] This is a very long summary for the test function that should definitely pass the minimum length check of fifty characters."
+    mock_client.chat.completions.create.return_value = mock_response
     
     summaries = summarizer.summarize_batch(["test.py:test:1"], builder)
     
@@ -37,7 +36,11 @@ def test_summarize_batch(mock_ollama):
     
 def test_parse_batch_response():
     config = LLMConfig()
-    summarizer = DeepSeekSummarizer(config, "")
+    # Mock OpenAI client creation in init
+    # Mock OpenAI client creation in init
+    with patch('codehierarchy.core.llm.deepseek_summarizer.OpenAI'), \
+         patch('codehierarchy.core.llm.deepseek_summarizer.ModelManager'):
+        summarizer = LMStudioSummarizer(config, "")
     
     response = """
     [id1] Summary 1

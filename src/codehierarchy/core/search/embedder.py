@@ -1,5 +1,5 @@
 from sentence_transformers import SentenceTransformer
-import faiss
+import faiss # type: ignore
 import numpy as np
 from typing import List, Dict, Tuple
 from pathlib import Path
@@ -65,7 +65,7 @@ class HighQualityEmbedder:
         
         return index, mapping
 
-    def save_index(self, index: faiss.Index, mapping: Dict[int, str], path: Path):
+    def save_index(self, index: faiss.Index, mapping: Dict[int, str], path: Path) -> None:
         """
         Save index and mapping to disk.
         """

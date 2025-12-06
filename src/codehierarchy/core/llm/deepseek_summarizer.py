@@ -1,21 +1,27 @@
-import ollama
 import logging
 import time
+import json
 from typing import List, Dict, Any
-import networkx as nx
+from openai import OpenAI
 from codehierarchy.config.schema import LLMConfig
 from codehierarchy.analysis.graph.graph_builder import InMemoryGraphBuilder
 from .validator import validate_summary
+from .model_manager import ModelManager
 
-class DeepSeekSummarizer:
+class LMStudioSummarizer:
     def __init__(self, config: LLMConfig, prompt_template: str):
         self.config = config
         self.prompt_template = prompt_template
+        self.client = OpenAI(base_url=config.base_url, api_key=config.api_key)
         self.model = config.model_name
+        
+        # Ensure model is loaded
+        self.model_manager = ModelManager(config)
+        self.model_manager.load_model()
         
     def summarize_batch(self, node_ids: List[str], builder: InMemoryGraphBuilder) -> Dict[str, str]:
         """
-        Summarize a batch of nodes using DeepSeek.
+        Summarize a batch of nodes using LM Studio.
         Returns a dictionary mapping node_id to summary.
         """
         if not node_ids:
@@ -40,23 +46,33 @@ class DeepSeekSummarizer:
         # 3. Call LLM
         try:
             start_time = time.time()
-            response = ollama.chat(
+            response = self.client.chat.completions.create(
                 model=self.model,
                 messages=[
                     {'role': 'system', 'content': self.prompt_template},
                     {'role': 'user', 'content': prompt}
                 ],
-                options={
-                    'num_ctx': self.config.context_window,
-                    'temperature': self.config.temperature,
-                    'top_p': 0.95,
-                    'num_thread': self.config.num_thread
+                temperature=self.config.temperature,
+                max_tokens=self.config.context_window, 
+                top_p=self.config.top_p,
+                extra_body={
+                    "top_k": self.config.top_k,
+                    "repeat_penalty": self.config.repeat_penalty,
+                    "min_p": self.config.min_p,
+                    "context_overflow_policy": self.config.context_overflow_policy
                 }
             )
             duration = time.time() - start_time
             logging.info(f"LLM call took {duration:.2f}s for {len(valid_node_ids)} nodes")
             
-            content = response['message']['content']
+            if not response.choices:
+                logging.warning("LLM returned no choices.")
+                return {}
+
+            content = response.choices[0].message.content
+            if not content:
+                logging.warning("LLM returned empty content.")
+                return {}
             
             # 4. Parse response
             summaries = self._parse_batch_response(content, valid_node_ids)
@@ -73,7 +89,7 @@ class DeepSeekSummarizer:
             return validated_summaries
             
         except Exception as e:
-            logging.error(f"LLM call failed: {e}")
+            logging.error(f"LLM call failed: {e}", exc_info=True)
             return {}
 
     def _build_batch_prompt(self, node_ids: List[str], contexts: List[dict]) -> str:
@@ -86,7 +102,6 @@ class DeepSeekSummarizer:
         for nid, ctx in zip(node_ids, contexts):
             node = ctx['node']
             source = ctx['source']
-            meta = ctx['metadata']
             
             parts.append(f"Component ID: [{nid}]")
             parts.append(f"Type: {node.get('type', 'unknown')}")
@@ -113,7 +128,7 @@ class DeepSeekSummarizer:
     def _parse_batch_response(self, response: str, node_ids: List[str]) -> Dict[str, str]:
         summaries = {}
         current_id = None
-        current_lines = []
+        current_lines: List[str] = []
         
         for line in response.splitlines():
             line = line.strip()
@@ -121,9 +136,6 @@ class DeepSeekSummarizer:
                 continue
                 
             # Check for ID marker
-            # We expect [file:name:line] or just [ID]
-            # But the prompt asked for [COMPONENT_ID]
-            # Let's look for known IDs
             found_id = None
             for nid in node_ids:
                 if f"[{nid}]" in line:

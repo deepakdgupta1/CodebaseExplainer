@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Dict
 import logging
 
-def save_checkpoint(summaries: Dict[str, str], checkpoint_file: Path):
+def save_checkpoint(summaries: Dict[str, str], checkpoint_file: Path) -> None:
     """
     Save current summaries to a JSON checkpoint file.
     """
@@ -26,7 +26,10 @@ def load_checkpoint(checkpoint_file: Path) -> Dict[str, str]:
         
     try:
         with open(checkpoint_file, 'r') as f:
-            return json.load(f)
+            data = json.load(f)
+            if isinstance(data, dict):
+                return {k: str(v) for k, v in data.items()}
+            return {}
     except Exception as e:
         logging.error(f"Failed to load checkpoint: {e}")
         return {}

@@ -20,7 +20,7 @@ class EnterpriseSearchEngine:
             self.vector_index = None
             self.id_mapping = {}
 
-    def search(self, query: str, mode='hybrid', top_k=20) -> List[Result]:
+    def search(self, query: str, mode: str = 'hybrid', top_k: int = 20) -> List[Result]:
         if mode == 'keyword':
             return self.keyword_search.search(query, top_k)
         elif mode == 'semantic':
@@ -32,31 +32,38 @@ class EnterpriseSearchEngine:
         if not self.vector_index:
             return []
             
-        # Encode query
-        embedding = self.embedder.encode_batch([query])[0]
-        
-        # Search FAISS
-        self.vector_index.nprobe = 64
-        scores, indices = self.vector_index.search(np.array([embedding]).astype('float32'), top_k)
-        
-        results = []
-        for score, idx in zip(scores[0], indices[0]):
-            if idx == -1:
-                continue
-            nid = self.id_mapping.get(idx)
-            if nid:
-                # We need to fetch node details. 
-                # Ideally we have a metadata store.
-                # For now, return minimal result
-                results.append(Result(
-                    node_id=nid,
-                    name="?", # Need lookup
-                    file="?", # Need lookup
-                    line=0,
-                    summary="?", # Need lookup
-                    score=float(score)
-                ))
-        return results
+        try:
+            # Encode query
+            embedding = self.embedder.encode_batch([query])[0]
+            
+            # Search FAISS
+            # nprobe should ideally be configurable, defaulting to 64 if not set
+            self.vector_index.nprobe = 64 
+            scores, indices = self.vector_index.search(np.array([embedding]).astype('float32'), top_k)
+            
+            results = []
+            for score, idx in zip(scores[0], indices[0]):
+                if idx == -1:
+                    continue
+                nid = self.id_mapping.get(idx)
+                if nid:
+                    # We need to fetch node details. 
+                    # Ideally we have a metadata store.
+                    # For now, return minimal result
+                    results.append(Result(
+                        node_id=nid,
+                        name="?", # Need lookup
+                        file="?", # Need lookup
+                        line=0,
+                        summary="?", # Need lookup
+                        score=float(score)
+                    ))
+            return results
+        except Exception as e:
+            # Log the error properly instead of just failing silently or crashing
+            import logging
+            logging.error(f"Semantic search failed: {e}")
+            return []
 
     def _hybrid_search(self, query: str, top_k: int) -> List[Result]:
         # Get candidates
@@ -64,7 +71,7 @@ class EnterpriseSearchEngine:
         semantic_results = self._semantic_search(query, top_k * 2)
         
         # RRF
-        fused_scores = defaultdict(float)
+        fused_scores: Dict[str, float] = defaultdict(float)
         
         # Map node_id to result object for reconstruction
         result_map = {}

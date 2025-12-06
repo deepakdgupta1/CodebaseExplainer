@@ -32,7 +32,7 @@ from codehierarchy.analysis.graph import InMemoryGraphBuilder
 
 from codehierarchy.core import (
     Orchestrator,
-    DeepSeekSummarizer,
+    LMStudioSummarizer,
     HighQualityEmbedder,
     EnterpriseSearchEngine,
     KeywordSearch,
@@ -58,7 +58,7 @@ __all__ = [
     
     # Core
     "Orchestrator",
-    "DeepSeekSummarizer",
+    "LMStudioSummarizer",
     "HighQualityEmbedder",
     "EnterpriseSearchEngine",
     "KeywordSearch",

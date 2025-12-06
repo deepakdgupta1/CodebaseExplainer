@@ -24,7 +24,7 @@ def orchestrator(mock_config):
 @patch('codehierarchy.core.pipeline.orchestrator.FileScanner')
 @patch('codehierarchy.core.pipeline.orchestrator.ParallelParser')
 @patch('codehierarchy.core.pipeline.orchestrator.InMemoryGraphBuilder')
-@patch('codehierarchy.core.pipeline.orchestrator.DeepSeekSummarizer')
+@patch('codehierarchy.core.pipeline.orchestrator.LMStudioSummarizer')
 @patch('codehierarchy.core.pipeline.orchestrator.HighQualityEmbedder')
 @patch('codehierarchy.core.pipeline.orchestrator.KeywordSearch')
 def test_pipeline_execution_mocked(

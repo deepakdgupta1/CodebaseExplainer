@@ -5,8 +5,8 @@ import logging
 from codehierarchy.analysis.parser.parallel_parser import ParseResult
 
 class InMemoryGraphBuilder:
-    def __init__(self):
-        self.graph = nx.DiGraph()
+    def __init__(self) -> None:
+        self.graph: nx.DiGraph = nx.DiGraph()
         self.node_cache: Dict[str, Dict[str, Any]] = {}
         self.metadata: Dict[str, Dict[str, Any]] = {}
         
@@ -17,7 +17,13 @@ class InMemoryGraphBuilder:
 
     def build_from_results(self, results: Dict[Path, ParseResult]) -> nx.DiGraph:
         """
-        Build the graph from parse results.
+        Build the dependency graph from parse results.
+
+        Args:
+            results: A dictionary mapping file paths to their parse results.
+
+        Returns:
+            A NetworkX DiGraph representing the codebase structure.
         """
         logging.info("Building graph from parse results...")
         
@@ -117,7 +123,7 @@ class InMemoryGraphBuilder:
             
         return None
 
-    def _compute_metrics(self):
+    def _compute_metrics(self) -> None:
         """
         Compute graph-theoretic metrics.
         """
@@ -139,6 +145,13 @@ class InMemoryGraphBuilder:
     def get_node_with_context(self, node_id: str, depth: int = 2) -> Dict[str, Any]:
         """
         Retrieve node with full context for LLM.
+
+        Args:
+            node_id: The unique identifier of the node.
+            depth: The depth of context to retrieve (currently unused but reserved for future).
+
+        Returns:
+            A dictionary containing node data, source code, metadata, parents, and children.
         """
         if node_id not in self.graph:
             return {}

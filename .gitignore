@@ -52,3 +52,6 @@ performance-metrics.json
 # IDEs
 .vscode/
 .idea/
+
+# LLMs
+Qwen2.5-Coder-32B-Instruct.IQ4_XS.gguf

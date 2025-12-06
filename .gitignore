@@ -54,4 +54,4 @@ performance-metrics.json
 .idea/
 
 # LLMs
-/home/deeog/.lmstudio/models/custom_user/qwen2.5-coder-32b-custom/Qwen2.5-Coder-32B-Instruct.IQ4_XS.gguf
+Qwen2.5-Coder-32B-Instruct.IQ4_XS.gguf

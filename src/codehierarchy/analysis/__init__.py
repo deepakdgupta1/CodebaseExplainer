@@ -7,9 +7,16 @@ This package contains modules for:
 - graph: Dependency graph construction
 """
 
-from codehierarchy.analysis.parser import *
-from codehierarchy.analysis.scanner import *
-from codehierarchy.analysis.graph import *
+from codehierarchy.analysis.parser.tree_sitter_parser import (
+    TreeSitterParser
+)
+from codehierarchy.analysis.parser.parallel_parser import ParallelParser
+from codehierarchy.analysis.parser.node_extractor import NodeExtractor
+from codehierarchy.analysis.parser.call_graph_analyzer import (
+    CallGraphAnalyzer
+)
+from codehierarchy.analysis.scanner.file_scanner import FileScanner
+from codehierarchy.analysis.graph.graph_builder import GraphBuilder
 
 __all__ = [
     # Re-export key classes for convenience

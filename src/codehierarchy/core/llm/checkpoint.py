@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Dict
 import logging
 
+
 def save_checkpoint(summaries: Dict[str, str], checkpoint_file: Path) -> None:
     """
     Save current summaries to a JSON checkpoint file.
@@ -10,12 +11,15 @@ def save_checkpoint(summaries: Dict[str, str], checkpoint_file: Path) -> None:
     try:
         # Create parent dir if needed
         checkpoint_file.parent.mkdir(parents=True, exist_ok=True)
-        
+
         with open(checkpoint_file, 'w') as f:
             json.dump(summaries, f, indent=2)
-        logging.info(f"Checkpoint saved to {checkpoint_file} ({len(summaries)} summaries)")
+        logging.info(
+            f"Checkpoint saved to {checkpoint_file} ({
+                len(summaries)} summaries)")
     except Exception as e:
         logging.error(f"Failed to save checkpoint: {e}")
+
 
 def load_checkpoint(checkpoint_file: Path) -> Dict[str, str]:
     """
@@ -23,7 +27,7 @@ def load_checkpoint(checkpoint_file: Path) -> Dict[str, str]:
     """
     if not checkpoint_file.exists():
         return {}
-        
+
     try:
         with open(checkpoint_file, 'r') as f:
             data = json.load(f)

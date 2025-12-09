@@ -6,8 +6,10 @@ This package contains modules for:
 - output: Markdown and report generation
 """
 
-from codehierarchy.interface.cli import *
-from codehierarchy.interface.output import *
+from codehierarchy.interface.cli.cli import main
+from codehierarchy.interface.output.markdown_generator import (
+    MarkdownGenerator
+)
 
 __all__ = [
     # Re-export key classes for convenience

@@ -5,6 +5,7 @@ import tree_sitter_python
 import tree_sitter_typescript
 from .complexity import compute_cyclomatic_complexity, compute_loc
 
+
 @dataclass
 class NodeInfo:
     """
@@ -20,24 +21,26 @@ class NodeInfo:
     complexity: int = 0
     loc: int = 0
 
+
 class NodeExtractor:
     """
     Extracts code nodes (functions, classes) from source code using Tree-sitter.
     """
+
     def __init__(self) -> None:
         # Initialize languages for queries
         self.langs = {
-            'python': Language(tree_sitter_python.language()),
-            'typescript': Language(tree_sitter_typescript.language_typescript())
-        }
-        
+            'python': Language(
+                tree_sitter_python.language()), 'typescript': Language(
+                tree_sitter_typescript.language_typescript())}
+
         # Define queries
         self.queries = {
             'python': """
                 (function_definition
                     name: (identifier) @name
                     body: (block) @body) @function
-                
+
                 (class_definition
                     name: (identifier) @name
                     body: (block) @body) @class
@@ -46,37 +49,41 @@ class NodeExtractor:
                 (function_declaration
                     name: (identifier) @name
                     body: (statement_block) @body) @function
-                
+
                 (class_declaration
                     name: (type_identifier) @name
                     body: (class_body) @body) @class
-                    
+
                 (method_definition
                     name: (property_identifier) @name
                     body: (statement_block) @body) @method
             """
         }
 
-    def extract_all_nodes(self, tree: Tree, language: str, source_bytes: bytes) -> List[NodeInfo]:
+    def extract_all_nodes(
+            self,
+            tree: Tree,
+            language: str,
+            source_bytes: bytes) -> List[NodeInfo]:
         if language not in self.langs:
             return []
-            
+
         lang_obj = self.langs[language]
         query_str = self.queries.get(language)
         if not query_str:
             return []
-            
+
         query = Query(lang_obj, query_str)
         cursor = QueryCursor(query)
         captures_dict = cursor.captures(tree.root_node)
-        
+
         nodes = []
         # Captures is now a dict: {capture_name: [nodes]}
         # We process main captures (function, class, method)
-        
+
         # Helper to process a captured node
         processed_ids = set()
-        
+
         # Iterate through the relevant capture names
         for capture_name in ['function', 'class', 'method']:
             if capture_name not in captures_dict:
@@ -85,25 +92,28 @@ class NodeExtractor:
                 if node.id in processed_ids:
                     continue
                 processed_ids.add(node.id)
-                
+
                 # Extract details
                 name_node = node.child_by_field_name('name')
                 name = "anonymous"
                 if name_node:
-                    name = source_bytes[name_node.start_byte:name_node.end_byte].decode('utf-8')
-                
-                source = source_bytes[node.start_byte:node.end_byte].decode('utf-8')
-                
+                    name = source_bytes[name_node.start_byte:name_node.end_byte].decode(
+                        'utf-8')
+
+                source = source_bytes[node.start_byte:node.end_byte].decode(
+                    'utf-8')
+
                 # Extract docstring (simplified)
-                docstring = self._extract_docstring(node, language, source_bytes)
-                
+                docstring = self._extract_docstring(
+                    node, language, source_bytes)
+
                 # Extract signature (first line or up to body)
                 signature = self._extract_signature(node, source_bytes)
-                
+
                 # Metrics
                 complexity = compute_cyclomatic_complexity(node, language)
                 loc = compute_loc(source)
-                
+
                 nodes.append(NodeInfo(
                     type=capture_name,
                     name=name,
@@ -115,10 +125,14 @@ class NodeExtractor:
                     complexity=complexity,
                     loc=loc
                 ))
-                
+
         return nodes
 
-    def _extract_docstring(self, node: Node, language: str, source_bytes: bytes) -> Optional[str]:
+    def _extract_docstring(
+            self,
+            node: Node,
+            language: str,
+            source_bytes: bytes) -> Optional[str]:
         if language == 'python':
             body = node.child_by_field_name('body')
             if body and body.child_count > 0:
@@ -126,9 +140,11 @@ class NodeExtractor:
                 if first_stmt and first_stmt.type == 'expression_statement':
                     expr = first_stmt.child(0)
                     if expr and expr.type == 'string':
-                        return source_bytes[expr.start_byte:expr.end_byte].decode('utf-8').strip('"""\'\'\'')
+                        return source_bytes[expr.start_byte:expr.end_byte].decode(
+                            'utf-8').strip('"""\'\'\'')
         # TypeScript JSDoc usually precedes the node, tree-sitter might capture it if we look at previous sibling
-        # For now, simplified: return None for TS or implement complex logic later
+        # For now, simplified: return None for TS or implement complex logic
+        # later
         return None
 
     def _extract_signature(self, node: Node, source_bytes: bytes) -> str:

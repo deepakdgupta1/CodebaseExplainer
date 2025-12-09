@@ -2,15 +2,18 @@ import networkx as nx
 from pathlib import Path
 from typing import List
 
+
 def get_module_subgraph(graph: nx.DiGraph, module_path: str) -> nx.DiGraph:
     """
     Extract subgraph containing only nodes from a specific module/file.
     """
-    nodes = [n for n, d in graph.nodes(data=True) if d.get('file') == module_path]
+    nodes = [n for n, d in graph.nodes(
+        data=True) if d.get('file') == module_path]
     # subgraph returns a view, copy returns a new Graph/DiGraph
     # We ensure it's a DiGraph by casting or relying on input being DiGraph
     sub = graph.subgraph(nodes).copy()
-    return sub # type: ignore
+    return sub  # type: ignore
+
 
 def get_dependency_chain(graph: nx.DiGraph, node_id: str) -> List[str]:
     """
@@ -18,7 +21,11 @@ def get_dependency_chain(graph: nx.DiGraph, node_id: str) -> List[str]:
     """
     return list(nx.bfs_tree(graph, node_id))
 
-def export_graph(graph: nx.DiGraph, output_path: Path, format: str = 'graphml') -> None:
+
+def export_graph(
+        graph: nx.DiGraph,
+        output_path: Path,
+        format: str = 'graphml') -> None:
     """
     Export graph to file for visualization.
     """

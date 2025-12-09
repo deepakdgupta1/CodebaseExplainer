@@ -32,7 +32,7 @@ cd ~/ai-models
 ollama create qwen2.5-coder-32b-custom -f Modelfile
 ```
 
-## 3. Verify Setup
+## 4. Verify Setup
 
 You can verify the model is working by running a simple prompt:
 
@@ -40,7 +40,7 @@ You can verify the model is working by running a simple prompt:
 ollama run qwen2.5-coder-32b-custom "Hello, are you ready to analyze code?"
 ```
 
-## 4. Run Analysis
+## 5. Run Analysis
 
 Now you can run the CodebaseExplainer analysis as usual from the project directory:
 

@@ -1,12 +1,12 @@
 # CodeHierarchy Explainer
 
-A high-performance codebase documentation and search system powered by DeepSeek Coder V2.
+A high-performance codebase documentation and search system powered by LM Studio compatible LLMs.
 
 ## Overview
 
 CodeHierarchy Explainer analyzes your codebase to generate comprehensive documentation and provide a powerful semantic search interface. It uses:
 - **Tree-Sitter** for robust parsing of Python and TypeScript.
-- **DeepSeek Coder V2** for generating high-quality summaries of code components.
+- **LM Studio** with LLMs like Qwen2.5-Coder for generating high-quality summaries of code components.
 - **NetworkX** for building a dependency graph of your code.
 - **FAISS & MPNet** for state-of-the-art semantic search.
 - **Rich & Click** for a beautiful CLI experience.
@@ -28,7 +28,7 @@ Use the provided setup script to create a virtual environment and install all de
 ```bash
 git clone https://github.com/yourusername/codehierarchy-explainer.git
 cd codehierarchy-explainer
-./setup_venv.sh
+./scripts/setup_venv.sh
 ```
 
 ### Manual Setup
@@ -50,10 +50,7 @@ cd codehierarchy-explainer
    pip install -e .
    ```
 
-4. Install Ollama and pull the model:
-   ```bash
-   ollama pull deepseek-coder-v2
-   ```
+4. Install LM Studio from https://lmstudio.ai/ and load a compatible model (default: Qwen2.5-Coder-32B).
 
 **Note**: All configuration files are now bundled within the package. No external config directory is needed.
 
@@ -84,14 +81,16 @@ codehierarchy search "how does the parser work?" --index-dir ./output/index
 
 ## Configuration
 
-You can customize the behavior by creating a `config.yaml` file. See `config/config.yaml` for defaults.
+You can customize the behavior by creating a `config.yaml` file. See `src/codehierarchy/config/config.yaml` for defaults.
 
 ```yaml
 system:
-  max_memory_gb: 16.0
+  max_memory_gb: 26.0
 
 llm:
-  model_name: "deepseek-coder-v2:16b-q4_K_M"
+  model_name: "Qwen2.5-Coder-32B-Instruct.IQ4_XS.gguf"
+  base_url: "http://localhost:1234/v1"
+  api_key: "lm-studio"
   batch_size: 10
 ```
 
@@ -137,24 +136,14 @@ codehierarchy/
 ```python
 # New structure imports
 from codehierarchy.analysis.parser import TreeSitterParser
-from codehierarchy.core.llm import DeepSeekSummarizer
+from codehierarchy.core.llm import LMStudioSummarizer
 from codehierarchy.interface.cli import main
 
 # Backward-compatible imports (convenience)
-from codehierarchy import TreeSitterParser, DeepSeekSummarizer
+from codehierarchy import TreeSitterParser, LMStudioSummarizer
 ```
 
-## Installation
-
-### Quick Setup (Recommended)
-
-Use the provided setup script to create a virtual environment and install all dependencies:
-
-```bash
-git clone https://github.com/yourusername/codehierarchy-explainer.git
-cd codehierarchy-explainer
-./scripts/setup_venv.sh
-```
+## Performance Targets
 
 | Metric | Target |
 |--------|--------|
@@ -164,5 +153,5 @@ cd codehierarchy-explainer
 
 ## Troubleshooting
 
-- **Ollama Connection Error**: Ensure Ollama is running (`ollama serve`).
+- **LM Studio Connection Error**: Ensure LM Studio is running with a model loaded at `http://localhost:1234`.
 - **Memory Issues**: Reduce `llm.batch_size` or `parsing.num_workers` in config.

@@ -494,7 +494,7 @@ class HighQualityEmbedder:
       title: "Enhanced Configuration for 12GB System",
       code: `# config.yaml - Optimized for DeepSeek V2
 system:
-  max_memory_gb: 12
+  max_memory_gb: 26
   temp_dir: "./.codehierarchy/tmp"
   output_dir: "./codehierarchy-docs"
   checkpoint_enabled: true
@@ -585,7 +585,7 @@ ab_testing:
   };
 
   const renderContent = () => {
-    switch(activeTab) {
+    switch (activeTab) {
       case 'architecture':
         return (
           <div className="space-y-6">
@@ -598,13 +598,13 @@ ab_testing:
                   <h3 className="font-semibold text-blue-400">{section.title}</h3>
                   <ChevronRight className={`w-5 h-5 transition-transform ${expandedSection === key ? 'rotate-90' : ''}`} />
                 </button>
-                
+
                 {expandedSection === key && (
                   <div className="p-4">
                     {section.description && (
                       <p className="text-gray-300 mb-3 bg-blue-900/20 p-3 rounded border border-blue-700">{section.description}</p>
                     )}
-                    
+
                     {section.components && (
                       <ul className="space-y-2">
                         {section.components.map((item, idx) => (
@@ -615,7 +615,7 @@ ab_testing:
                         ))}
                       </ul>
                     )}
-                    
+
                     {section.steps && (
                       <div className="space-y-3">
                         {section.steps.map((step, idx) => (
@@ -638,7 +638,7 @@ ab_testing:
                         </div>
                       </div>
                     )}
-                    
+
                     {section.allocations && (
                       <div className="space-y-2">
                         {section.allocations.map((alloc, idx) => (
@@ -649,7 +649,7 @@ ab_testing:
                                 <span className="text-sm font-mono text-blue-400 font-bold">{alloc.size}</span>
                               </div>
                               <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
-                                <div 
+                                <div
                                   className="h-full bg-gradient-to-r from-blue-500 to-purple-600"
                                   style={{ width: `${(parseFloat(alloc.size) / 12.0) * 100}%` }}
                                 />
@@ -659,7 +659,7 @@ ab_testing:
                         ))}
                       </div>
                     )}
-                    
+
                     {section.improvements && (
                       <div className="space-y-2">
                         {section.improvements.map((imp, idx) => (
@@ -678,7 +678,7 @@ ab_testing:
             ))}
           </div>
         );
-        
+
       case 'implementation':
         return (
           <div className="space-y-6">
@@ -696,7 +696,7 @@ ab_testing:
             ))}
           </div>
         );
-      
+
       case 'performance':
         return (
           <div className="space-y-6">
@@ -731,7 +731,7 @@ ab_testing:
                 </div>
               </div>
             </div>
-            
+
             <div className="border border-gray-700 rounded-lg bg-gray-800 p-4">
               <h3 className="font-semibold text-blue-400 mb-4">{performanceData.optimizations.title}</h3>
               <div className="space-y-3">
@@ -746,7 +746,7 @@ ab_testing:
                 ))}
               </div>
             </div>
-            
+
             <div className="border border-gray-700 rounded-lg bg-gray-800 overflow-hidden">
               <div className="px-4 py-3 bg-gray-750 border-b border-gray-700">
                 <h3 className="font-semibold text-blue-400">{performanceData.comparison.title}</h3>
@@ -780,7 +780,7 @@ ab_testing:
             </div>
           </div>
         );
-        
+
       case 'search':
         return (
           <div className="space-y-6">
@@ -799,7 +799,7 @@ ab_testing:
                 ))}
               </div>
             </div>
-            
+
             <div className="border border-gray-700 rounded-lg overflow-hidden bg-gray-800">
               <div className="px-4 py-3 bg-gray-750 border-b border-gray-700">
                 <h3 className="font-semibold text-blue-400">{searchSystem.implementation.title}</h3>
@@ -812,7 +812,7 @@ ab_testing:
             </div>
           </div>
         );
-        
+
       case 'config':
         return (
           <div className="space-y-6">
@@ -828,7 +828,7 @@ ab_testing:
             </div>
           </div>
         );
-        
+
       default:
         return null;
     }
@@ -874,11 +874,10 @@ ab_testing:
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-4 py-3 border-b-2 transition-colors whitespace-nowrap ${
-                  activeTab === tab.id
+                className={`flex items-center gap-2 px-4 py-3 border-b-2 transition-colors whitespace-nowrap ${activeTab === tab.id
                     ? 'border-blue-400 text-blue-400'
                     : 'border-transparent text-gray-400 hover:text-gray-300'
-                }`}
+                  }`}
               >
                 <Icon className="w-4 h-4" />
                 {tab.label}

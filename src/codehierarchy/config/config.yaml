@@ -1,5 +1,5 @@
 system:
-  max_memory_gb: 12.0
+  max_memory_gb: 26.0
   temp_dir: ".codehierarchy/temp"
   output_dir: "output"
   checkpointing_enabled: true

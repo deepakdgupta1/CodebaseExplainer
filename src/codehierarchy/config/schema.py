@@ -3,7 +3,7 @@ from typing import List, Optional, Literal
 from pydantic import BaseModel, Field
 
 class SystemConfig(BaseModel):
-    max_memory_gb: float = Field(default=12.0, description="Maximum memory usage in GB")
+    max_memory_gb: float = Field(default=26.0, description="Maximum memory usage in GB")
     temp_dir: Path = Field(default=Path(".codehierarchy/temp"), description="Directory for temporary files")
     output_dir: Path = Field(default=Path("output"), description="Default output directory")
     checkpointing_enabled: bool = Field(default=True, description="Enable checkpointing for long processes")

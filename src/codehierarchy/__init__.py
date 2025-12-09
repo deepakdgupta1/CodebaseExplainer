@@ -47,7 +47,7 @@ from codehierarchy.utils import setup_logging, Profiler, detect_language
 __all__ = [
     # Version
     "__version__",
-    
+
     # Analysis
     "TreeSitterParser",
     "ParallelParser",
@@ -55,18 +55,18 @@ __all__ = [
     "CallGraphAnalyzer",
     "FileScanner",
     "InMemoryGraphBuilder",
-    
+
     # Core
     "Orchestrator",
     "LMStudioSummarizer",
     "HighQualityEmbedder",
     "EnterpriseSearchEngine",
     "KeywordSearch",
-    
+
     # Interface
     "main",
     "MarkdownGenerator",
-    
+
     # Config & Utils
     "Config",
     "load_config",

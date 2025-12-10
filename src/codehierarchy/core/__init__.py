@@ -8,7 +8,7 @@ This package contains modules for:
 """
 
 from codehierarchy.core.pipeline.orchestrator import Orchestrator
-from codehierarchy.core.llm.deepseek_summarizer import (
+from codehierarchy.core.llm.lmstudio_summarizer import (
     LMStudioSummarizer
 )
 from codehierarchy.core.search.embedder import Embedder

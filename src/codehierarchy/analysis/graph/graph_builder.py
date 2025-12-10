@@ -141,7 +141,8 @@ class InMemoryGraphBuilder:
         except Exception as e:
             logging.warning(f"Failed to compute PageRank: {e}")
 
-        # Identify critical paths (simplified: high centrality + high complexity)
+        # Identify critical paths
+        # (simplified: high centrality + high complexity)
         # ...
 
     def get_node_with_context(

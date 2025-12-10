@@ -160,8 +160,8 @@ Build dependency graph in memory with full source code caching and graph metrics
 
 LLM integration with batch processing (20 nodes/call) and smart context injection.
 
-#### [NEW] `src/codehierarchy/llm/deepseek_summarizer.py`
-- `DeepSeekSummarizer` class
+#### [NEW] `src/codehierarchy/llm/lmstudio_summarizer.py`
+- `LMStudioSummarizer` class
 - `__init__(config: LLMConfig, prompt_template: str)`
 - `summarize_batch(nodes: List[Node], graph: nx.DiGraph) -> List[str]`: Main entry point
 - `_create_smart_batches(nodes: List[Node], batch_size: int) -> List[List[Node]]`: Group by module/file for context relevance
@@ -300,8 +300,8 @@ Unit tests for all components plus integration test for full pipeline.
 - Test centrality computation
 - Test caching
 
-#### [NEW] `tests/llm/test_deepseek_summarizer.py`
-- Mock Ollama API calls
+#### [NEW] `tests/llm/test_lmstudio_summarizer.py`
+- Mock LMStudio API calls
 - Test batch creation (smart grouping by module)
 - Test prompt construction with context
 - Test response parsing

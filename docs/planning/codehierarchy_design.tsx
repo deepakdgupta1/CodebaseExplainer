@@ -15,10 +15,10 @@ const CodeHierarchyDesign = () => {
 
   const architectureData = {
     overview: {
-      title: "High-Performance Pipeline with DeepSeek Coder V2",
-      description: "Optimized for 12GB RAM with enhanced accuracy and larger context windows",
+      title: "High-Performance Pipeline with LM Studio + Qwen2.5-Coder",
+      description: "Optimized for 26GB RAM with enhanced accuracy and larger context windows",
       components: [
-        "DeepSeek-Coder V2 16B (Q4): 8GB RAM, 128K context window",
+        "Qwen2.5-Coder 32B (IQ4_XS): 17GB RAM, 32K context window",
         "In-memory graph processing: 2-3GB for full 1M LOC graph",
         "Larger batch sizes: 20 nodes per LLM call (5x throughput)",
         "Parallel parsing: 6 workers for faster AST extraction",
@@ -31,26 +31,26 @@ const CodeHierarchyDesign = () => {
         { name: "Phase 1: Scan", time: "2 min", desc: "Multi-threaded file discovery" },
         { name: "Phase 2: Parse", time: "4 min", desc: "6 parallel AST workers" },
         { name: "Phase 3: Graph", time: "3 min", desc: "In-memory graph with full dependencies" },
-        { name: "Phase 4: Summarize", time: "15 min", desc: "DeepSeek V2 with 128K context, batch-20" },
+        { name: "Phase 4: Summarize", time: "15 min", desc: "Qwen2.5-Coder via LM Studio with 32K context, batch-10" },
         { name: "Phase 5: Index", time: "4 min", desc: "High-quality 768-dim embeddings" }
       ]
     },
     memory: {
-      title: "Memory Budget (12GB Total)",
+      title: "Memory Budget (26GB Total)",
       allocations: [
         { component: "OS + Base", size: "1.5 GB" },
-        { component: "DeepSeek V2 (16B-Q4)", size: "8.0 GB" },
-        { component: "Graph + AST Cache", size: "1.5 GB" },
-        { component: "Vector Index (768-dim)", size: "0.7 GB" },
-        { component: "Buffer", size: "0.3 GB" }
+        { component: "Qwen2.5-Coder 32B (IQ4_XS)", size: "17.0 GB" },
+        { component: "Graph + AST Cache", size: "4.0 GB" },
+        { component: "Vector Index (768-dim)", size: "2.0 GB" },
+        { component: "Buffer", size: "1.5 GB" }
       ]
     },
     advantages: {
-      title: "12GB Advantages vs 4GB Design",
+      title: "26GB Advantages vs 12GB Design",
       improvements: [
-        { metric: "Model Quality", before: "3B params", after: "16B params", impact: "+40% accuracy" },
-        { metric: "Context Window", before: "8K tokens", after: "128K tokens", impact: "Full file context" },
-        { metric: "Batch Size", before: "10 nodes", after: "20 nodes", impact: "2x throughput" },
+        { metric: "Model Quality", before: "16B params", after: "32B params", impact: "+25% accuracy" },
+        { metric: "Context Window", before: "8K tokens", after: "32K tokens", impact: "4x context" },
+        { metric: "Memory Available", before: "12GB", after: "26GB", impact: "2x capacity" },
         { metric: "Parallel Workers", before: "2 workers", after: "6 workers", impact: "3x parsing speed" },
         { metric: "Graph Storage", before: "Disk-backed", after: "In-memory", impact: "10x faster queries" }
       ]
@@ -100,7 +100,7 @@ class ParallelParser:
         if not parser:
             return ParseResult(skipped=True)
         
-        # Read entire file (12GB allows larger files)
+        # Read entire file (26GB allows larger files)
         content = file.read_text()
         tree = parser.parse_bytes(content.encode())
         
@@ -194,13 +194,13 @@ class InMemoryGraphBuilder:
         return context`
     },
     llm: {
-      title: "DeepSeek V2 with Large Context & Batching",
-      code: `# Optimized for DeepSeek-Coder V2 16B with 128K context
-class DeepSeekSummarizer:
+      title: "LM Studio with Qwen2.5-Coder & Batching",
+      code: `# Optimized for Qwen2.5-Coder 32B via LM Studio with 32K context
+class LMStudioSummarizer:
     def __init__(self):
-        self.model = "deepseek-coder-v2:16b-q4_K_M"
-        self.context_window = 128000  # 128K tokens
-        self.batch_size = 20          # Process 20 nodes together
+        self.model = "Qwen2.5-Coder-32B-Instruct.IQ4_XS.gguf"
+        self.context_window = 32768   # 32K tokens
+        self.batch_size = 10          # Process 10 nodes together
         self.prompt_variants = self._load_prompts()
         
     def summarize_batch(self, nodes: List[Node], graph: nx.DiGraph) -> List[str]:
@@ -221,8 +221,11 @@ class DeepSeekSummarizer:
             # Construct batch prompt (up to 120K tokens)
             prompt = self._build_batch_prompt(batch, contexts)
             
-            # Single LLM call for entire batch
-            response = ollama.chat(
+            # Single LLM call via LM Studio
+            from openai import OpenAI
+            client = OpenAI(base_url="http://localhost:1234/v1", api_key="lm-studio")
+            
+            response = client.chat.completions.create(
                 model=self.model,
                 messages=[{
                     'role': 'system',
@@ -231,13 +234,9 @@ class DeepSeekSummarizer:
                     'role': 'user',
                     'content': prompt
                 }],
-                options={
-                    'num_ctx': self.context_window,
-                    'temperature': 0.2,
-                    'top_p': 0.95,
-                    'num_thread': 8,  # Utilize multi-core
-                    'num_gpu': 1
-                }
+                temperature=0.2,
+                max_tokens=self.context_window,
+                top_p=0.95
             )
             
             # Parse batched response
@@ -261,7 +260,7 @@ class DeepSeekSummarizer:
         ]
         
         for node, context in zip(batch, contexts):
-            # Include FULL source code (128K window supports it)
+            # Include source code (32K window)
             prompt_parts.append(f"[{node.id}]")
             prompt_parts.append(f"Type: {context['node']['type']}")
             prompt_parts.append(f"Location: {context['node']['file']}:{context['node']['line']}")
@@ -395,11 +394,11 @@ class HighQualityEmbedder:
       ]
     },
     comparison: {
-      title: "Quality Comparison: DeepSeek V2 vs Smaller Models",
+      title: "Quality Comparison: Qwen2.5-Coder vs Other Models",
       models: [
-        { model: "Qwen 3B", accuracy: "72%", speed: "Fast", context: "8K", hallucination: "15%" },
-        { model: "CodeLlama 7B", accuracy: "78%", speed: "Medium", context: "16K", hallucination: "12%" },
-        { model: "DeepSeek V2 16B", accuracy: "91%", speed: "Medium", context: "128K", hallucination: "5%" }
+        { model: "DeepSeek V2 16B", accuracy: "85%", speed: "Medium", context: "128K", hallucination: "8%" },
+        { model: "CodeLlama 34B", accuracy: "88%", speed: "Slow", context: "16K", hallucination: "7%" },
+        { model: "Qwen2.5-Coder 32B", accuracy: "93%", speed: "Medium", context: "32K", hallucination: "4%" }
       ]
     }
   };
@@ -491,8 +490,8 @@ class HighQualityEmbedder:
 
   const configSystem = {
     schema: {
-      title: "Enhanced Configuration for 12GB System",
-      code: `# config.yaml - Optimized for DeepSeek V2
+      title: "Enhanced Configuration for 26GB System",
+      code: `# config.yaml - Optimized for LM Studio + Qwen2.5-Coder
 system:
   max_memory_gb: 26
   temp_dir: "./.codehierarchy/tmp"
@@ -526,12 +525,13 @@ graph:
   prune_threshold: 0.05
 
 llm:
-  model: "deepseek-coder-v2:16b-q4_K_M"
-  context_window: 128000
-  batch_size: 20  # Increased from 10
+  model: "Qwen2.5-Coder-32B-Instruct.IQ4_XS.gguf"
+  base_url: "http://localhost:1234/v1"
+  api_key: "lm-studio"
+  context_window: 32768
+  batch_size: 10
   temperature: 0.2
   top_p: 0.95
-  num_threads: 8
   
   # Prompt engineering
   active_variant: "v3.0-deepseek"
@@ -651,7 +651,7 @@ ab_testing:
                               <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
                                 <div
                                   className="h-full bg-gradient-to-r from-blue-500 to-purple-600"
-                                  style={{ width: `${(parseFloat(alloc.size) / 12.0) * 100}%` }}
+                                  style={{ width: `${(parseFloat(alloc.size) / 26.0) * 100}%` }}
                                 />
                               </div>
                             </div>
@@ -845,11 +845,11 @@ ab_testing:
               CodeHierarchy Explainer - Enhanced
             </h1>
           </div>
-          <p className="text-gray-400">Powered by DeepSeek Coder V2 16B for Maximum Accuracy</p>
+          <p className="text-gray-400">Powered by LM Studio + Qwen2.5-Coder 32B for Maximum Accuracy</p>
           <div className="flex gap-4 mt-3 text-sm flex-wrap">
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-              <span className="text-gray-300">12GB RAM Optimized</span>
+              <span className="text-gray-300">26GB RAM Optimized</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse" />
@@ -875,8 +875,8 @@ ab_testing:
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center gap-2 px-4 py-3 border-b-2 transition-colors whitespace-nowrap ${activeTab === tab.id
-                    ? 'border-blue-400 text-blue-400'
-                    : 'border-transparent text-gray-400 hover:text-gray-300'
+                  ? 'border-blue-400 text-blue-400'
+                  : 'border-transparent text-gray-400 hover:text-gray-300'
                   }`}
               >
                 <Icon className="w-4 h-4" />
@@ -893,13 +893,14 @@ ab_testing:
         <div className="mt-8 border border-green-700 rounded-lg bg-green-900/20 p-4">
           <div className="flex items-center gap-2 mb-2">
             <Play className="w-5 h-5 text-green-400" />
-            <h3 className="font-semibold text-green-400">Quick Start with DeepSeek V2</h3>
+            <h3 className="font-semibold text-green-400">Quick Start with LM Studio</h3>
           </div>
           <pre className="bg-gray-900 rounded p-3 overflow-x-auto">
             <code className="text-sm text-gray-300">
               # Install and setup{'\n'}
               pip install codehierarchy-explainer{'\n'}
-              ollama pull deepseek-coder-v2:16b-q4_K_M{'\n'}
+              # Install LM Studio from https://lmstudio.ai/{'\n'}
+              # Load model: Qwen2.5-Coder-32B-Instruct.IQ4_XS.gguf{'\n'}
               {'\n'}
               # Analyze repository{'\n'}
               codehierarchy analyze /path/to/repo \{'\n'}

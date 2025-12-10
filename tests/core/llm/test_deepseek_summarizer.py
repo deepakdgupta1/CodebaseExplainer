@@ -1,16 +1,16 @@
 import pytest
 from unittest.mock import Mock, patch, MagicMock
-from codehierarchy.core.llm.deepseek_summarizer import LMStudioSummarizer
+from codehierarchy.core.llm.lmstudio_summarizer import LMStudioSummarizer
 from codehierarchy.config.schema import LLMConfig
 
 @pytest.fixture
 def mock_openai():
-    with patch('codehierarchy.core.llm.deepseek_summarizer.OpenAI') as mock:
+    with patch('codehierarchy.core.llm.lmstudio_summarizer.OpenAI') as mock:
         yield mock
 
 def test_summarize_batch(mock_openai):
     config = LLMConfig()
-    with patch('codehierarchy.core.llm.deepseek_summarizer.ModelManager') as MockManager:
+    with patch('codehierarchy.core.llm.lmstudio_summarizer.ModelManager') as MockManager:
         summarizer = LMStudioSummarizer(config, "System Prompt")
     
     # Mock builder and context
@@ -38,8 +38,8 @@ def test_parse_batch_response():
     config = LLMConfig()
     # Mock OpenAI client creation in init
     # Mock OpenAI client creation in init
-    with patch('codehierarchy.core.llm.deepseek_summarizer.OpenAI'), \
-         patch('codehierarchy.core.llm.deepseek_summarizer.ModelManager'):
+    with patch('codehierarchy.core.llm.lmstudio_summarizer.OpenAI'), \
+         patch('codehierarchy.core.llm.lmstudio_summarizer.ModelManager'):
         summarizer = LMStudioSummarizer(config, "")
     
     response = """

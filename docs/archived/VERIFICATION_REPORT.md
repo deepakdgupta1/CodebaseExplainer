@@ -64,7 +64,7 @@ All 414 tasks from TASKS.md have been implemented and verified. The CodeHierarch
 **Status**: 100% Complete
 
 **Verified Components**:
-- ✅ `deepseek_summarizer.py`: Ollama integration with batching
+- ✅ `lmstudio_summarizer.py`: LMStudio integration with batching
 - ✅ Batch processing: Smart batching by module/file
 - ✅ Prompt construction: Rich context injection
 - ✅ Response parsing: Component ID marker extraction
@@ -123,7 +123,7 @@ codehierarchy search "query" --index-dir ./index --mode hybrid
 - ✅ `test_node_extractor.py`: Function/class extraction
 - ✅ `test_call_graph_analyzer.py`: Call/import/inheritance detection
 - ✅ `test_graph_builder.py`: Graph construction and context retrieval
-- ✅ `test_deepseek_summarizer.py`: LLM integration with mocks
+- ✅ `test_lmstudio_summarizer.py`: LLM integration with mocks
 - ✅ `test_embedder.py`: Embedding generation and indexing
 - ✅ `test_search_engine.py`: Hybrid search logic
 - ✅ `test_config_loader.py`: Configuration loading

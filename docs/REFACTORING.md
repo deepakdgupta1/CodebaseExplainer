@@ -109,7 +109,7 @@ from codehierarchy import TreeSitterParser, DeepSeekSummarizer, main
 - All Python files in moved modules had their imports updated
 - Key files:
   - `core/pipeline/orchestrator.py`
-  - `core/llm/deepseek_summarizer.py`
+  - `core/llm/lmstudio_summarizer.py`
   - `interface/cli/cli.py`
   - `analysis/parser/parallel_parser.py`
   - `analysis/graph/graph_builder.py`

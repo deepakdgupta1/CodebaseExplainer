@@ -140,11 +140,11 @@
 
 ---
 
-## Phase 4: DeepSeek LLM Summarizer
+## Phase 4: LMStudio LLM Summarizer
 
 ### 4.1 LLM Integration
-- [x] Create `src/codehierarchy/llm/deepseek_summarizer.py`
-- [x] Implement `DeepSeekSummarizer.__init__(config: LLMConfig)`
+- [x] Create `src/codehierarchy/llm/lmstudio_summarizer.py`
+- [x] Implement `LMStudioSummarizer.__init__(config: LLMConfig)`
 - [x] Set model to `deepseek-coder-v2:16b-q4_K_M`
 - [x] Set context window to `128000`
 - [x] Set batch size to `20`
@@ -326,8 +326,8 @@
 - [x] Test caching mechanisms
 
 ### 7.3 Unit Tests - LLM
-- [x] Create `tests/llm/test_deepseek_summarizer.py`
-- [x] Mock Ollama API calls
+- [x] Create `tests/llm/test_lmstudio_summarizer.py`
+- [x] Mock LMStudio API calls
 - [x] Test batch creation logic
 - [x] Test prompt construction
 - [x] Test response parsing

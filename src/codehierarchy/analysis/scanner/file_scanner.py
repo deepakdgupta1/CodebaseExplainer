@@ -33,10 +33,11 @@ class FileScanner:
         # Note: rglob('*') can be slow for massive trees,
         # but we filter as we go
         for path in root.rglob('*'):
+            # Skip directories
             if not path.is_file():
                 continue
 
-           # Check extension
+            # Check extension
             if path.suffix.lower() not in self.extensions:
                 continue
 

@@ -92,6 +92,25 @@ llm:
   base_url: "http://localhost:1234/v1"
   api_key: "lm-studio"
   batch_size: 10
+  temperature: 0.2
+  timeout_seconds: 300
+  max_retries: 2
+  # Advanced LM Studio Settings
+  context_overflow_policy: "stopAtLimit"
+  top_k: 40
+  repeat_penalty: 1.1
+  min_p: 0.05
+  top_p: 0.95
+  gpu_offload_ratio: 1.0
+  cpu_threads: 4
+  eval_batch_size: 8
+  flash_attention: false
+  use_mmap: true
+
+embeddings:
+  model_name: "all-mpnet-base-v2"
+  dimension: 768
+  batch_size: 32
 ```
 
 Pass it to the CLI:

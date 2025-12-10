@@ -16,7 +16,7 @@ from codehierarchy.analysis.parser.call_graph_analyzer import (
     CallGraphAnalyzer
 )
 from codehierarchy.analysis.scanner.file_scanner import FileScanner
-from codehierarchy.analysis.graph.graph_builder import GraphBuilder
+from codehierarchy.analysis.graph.graph_builder import InMemoryGraphBuilder
 
 __all__ = [
     # Re-export key classes for convenience
@@ -25,5 +25,5 @@ __all__ = [
     "NodeExtractor",
     "CallGraphAnalyzer",
     "FileScanner",
-    "GraphBuilder",
+    "InMemoryGraphBuilder",
 ]

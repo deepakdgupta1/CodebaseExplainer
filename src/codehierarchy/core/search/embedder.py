@@ -1,3 +1,14 @@
+"""
+High-quality semantic embedder for code summaries.
+
+This module provides the HighQualityEmbedder class for generating
+sentence embeddings using the SentenceTransformers library and building
+FAISS indices for efficient similarity search.
+
+The embedder uses the all-mpnet-base-v2 model by default, which provides
+high-quality 768-dimensional embeddings suitable for semantic search.
+"""
+
 from sentence_transformers import SentenceTransformer
 import faiss  # type: ignore
 import numpy as np
@@ -8,10 +19,35 @@ import logging
 
 
 class HighQualityEmbedder:
+    """
+    Generates sentence embeddings and builds FAISS indices.
+
+    Uses SentenceTransformers to create dense vector representations
+    of text summaries, enabling semantic similarity search. The index
+    uses IVF (Inverted File) clustering for efficient approximate
+    nearest neighbor search.
+
+    Attributes:
+        model: The SentenceTransformer model instance.
+        dimension: Dimensionality of the embedding vectors.
+
+    Example:
+        >>> embedder = HighQualityEmbedder()
+        >>> summaries = {"node1": "Handles user auth", "node2": "DB conn"}
+        >>> index, mapping = embedder.build_index(summaries)
+    """
+
     def __init__(
             self,
             model_name: str = 'all-mpnet-base-v2',
-            dimension: int = 768):
+            dimension: int = 768) -> None:
+        """
+        Initialize the embedder with a specified model.
+
+        Args:
+            model_name: HuggingFace model name for SentenceTransformer.
+            dimension: Expected embedding dimension (must match model).
+        """
         logging.info(f"Loading embedding model: {model_name}")
         self.model = SentenceTransformer(model_name)
         self.dimension = dimension

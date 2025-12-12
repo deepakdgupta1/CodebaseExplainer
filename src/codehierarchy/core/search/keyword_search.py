@@ -1,3 +1,14 @@
+"""
+SQLite FTS5-based keyword search engine.
+
+This module provides the KeywordSearch class for full-text search
+using SQLite's FTS5 extension with BM25 ranking. Ideal for exact
+keyword matches and phrase searches.
+
+FTS5 is used with the Porter stemmer for better matching of
+word variations (e.g., "running" matches "run").
+"""
+
 import sqlite3
 from pathlib import Path
 from typing import List, Dict, Any
@@ -5,7 +16,30 @@ from .result import Result
 
 
 class KeywordSearch:
-    def __init__(self, db_path: Path):
+    """
+    Full-text search using SQLite FTS5 with BM25 ranking.
+
+    Provides indexing and searching over code summaries using
+    SQLite's built-in full-text search capabilities.
+
+    Attributes:
+        db_path: Path to the SQLite database file.
+
+    Example:
+        >>> ks = KeywordSearch(Path("./index/keyword.db"))
+        >>> ks.index_data(summaries, nodes)
+        >>> results = ks.search("authentication handler", top_k=10)
+    """
+
+    def __init__(self, db_path: Path) -> None:
+        """
+        Initialize the keyword search index.
+
+        Creates the database file and FTS5 table if they don't exist.
+
+        Args:
+            db_path: Path where the SQLite database will be stored.
+        """
         self.db_path = db_path
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
         self._init_db()

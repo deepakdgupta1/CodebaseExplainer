@@ -1,3 +1,26 @@
+"""
+LM Studio Model Manager.
+
+This module provides the ModelManager class for managing the lifecycle of
+LLM models via LM Studio's CLI and API. It handles:
+
+- Automatic discovery and bootstrap of the LM Studio CLI (``lms``)
+- Server health monitoring and auto-start
+- Model loading with GPU offload configuration
+- Idempotent operations (safe to call multiple times)
+
+Example:
+    >>> from codehierarchy.config.schema import LLMConfig
+    >>> config = LLMConfig(model_name="deepseek-coder-v2-lite")
+    >>> manager = ModelManager(config)
+    >>> model_id = manager.load_model()
+    >>> print(f"Loaded model: {model_id}")
+
+Note:
+    Requires LM Studio to be installed. The module will check common
+    installation paths and exit if the CLI is not found.
+"""
+
 import logging
 import subprocess
 import shutil
@@ -7,13 +30,45 @@ import sys
 import platform
 import requests
 from pathlib import Path
+
+
 from codehierarchy.config.schema import LLMConfig
 
 # Configure logging if not already configured in main app
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
+
 class ModelManager:
-    def __init__(self, config: LLMConfig):
+    """
+    Manages LM Studio model lifecycle including server and model state.
+
+    This class provides a high-level interface for:
+    - Resolving the LM Studio CLI binary path
+    - Bootstrapping the CLI environment
+    - Starting the LM Studio server if not running
+    - Loading and verifying models via the OpenAI-compatible API
+
+    Attributes:
+        config: The LLM configuration containing model settings.
+        port: The port LM Studio server runs on (default: 1234).
+        base_url: The OpenAI-compatible API base URL.
+        lms_path: Resolved path to the ``lms`` CLI binary.
+
+    Raises:
+        SystemExit: If LM Studio CLI is not found or bootstrap fails.
+    """
+
+    def __init__(self, config: LLMConfig) -> None:
+        """
+        Initialize the ModelManager.
+
+        Args:
+            config: LLMConfig containing model_name, gpu_offload_ratio,
+                   context_window and other model parameters.
+
+        Raises:
+            SystemExit: If the LM Studio CLI cannot be found or bootstrapped.
+        """
         self.config = config
         self.port = 1234
         self.base_url = f"http://localhost:{self.port}/v1"

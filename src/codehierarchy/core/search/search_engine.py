@@ -1,3 +1,17 @@
+"""
+Enterprise search engine combining semantic and keyword search.
+
+This module provides the EnterpriseSearchEngine class which implements
+hybrid search by combining:
+
+- **Semantic search**: Vector similarity using FAISS embeddings
+- **Keyword search**: BM25-based FTS5 SQLite full-text search
+
+Results are fused using Reciprocal Rank Fusion (RRF) to combine
+the strengths of both approaches.
+"""
+
+import logging
 from typing import Dict, List
 from pathlib import Path
 from collections import defaultdict
@@ -9,7 +23,30 @@ from .result import Result
 
 
 class EnterpriseSearchEngine:
-    def __init__(self, index_dir: Path):
+    """
+    Hybrid search engine combining semantic and keyword approaches.
+
+    Provides three search modes:
+    - 'hybrid' (default): Combines semantic and keyword with RRF
+    - 'semantic': Pure vector similarity search
+    - 'keyword': Pure BM25 keyword search
+
+    Attributes:
+        index_dir: Directory containing index files.
+        embedder: HighQualityEmbedder for vector search.
+        keyword_search: KeywordSearch for text search.
+        vector_index: FAISS index (may be None if not loaded).
+        id_mapping: Maps FAISS IDs to node IDs.
+    """
+
+    def __init__(self, index_dir: Path) -> None:
+        """
+        Initialize the search engine and load indices.
+
+        Args:
+            index_dir: Path to directory containing vector.index,
+                      mapping.pkl, and keyword.db files.
+        """
         self.index_dir = index_dir
         self.embedder = HighQualityEmbedder()
         self.keyword_search = KeywordSearch(index_dir / "keyword.db")
@@ -70,7 +107,6 @@ class EnterpriseSearchEngine:
         except Exception as e:
             # Log the error properly instead of just failing silently or
             # crashing
-            import logging
             logging.error(f"Semantic search failed: {e}")
             return []
 

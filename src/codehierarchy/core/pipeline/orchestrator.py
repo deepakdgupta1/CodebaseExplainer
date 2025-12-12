@@ -1,3 +1,20 @@
+"""
+Pipeline orchestrator for codebase analysis.
+
+This module provides the Orchestrator class which coordinates the full
+analysis pipeline from file scanning through LLM summarization and
+search indexing. It manages the execution of all pipeline phases:
+
+1. **Scan**: Discover source files in the repository
+2. **Parse**: Extract code structure (classes, functions, etc.)
+3. **Graph**: Build an in-memory code graph
+4. **Summarize**: Generate LLM summaries for code elements
+5. **Index**: Build semantic and keyword search indices
+
+The orchestrator also handles checkpointing for resumable runs and
+performance profiling for each phase.
+"""
+
 from codehierarchy.core.llm.progress import SummarizationProgressEvent
 from typing import Any, Dict
 from pathlib import Path
@@ -17,7 +34,33 @@ from codehierarchy.core.llm.checkpoint import save_checkpoint, load_checkpoint
 
 
 class Orchestrator:
-    def __init__(self, config: Config):
+    """
+    Coordinates the full codebase analysis pipeline.
+
+    The orchestrator is the main entry point for running analysis.
+    It instantiates and coordinates all pipeline components, handles
+    progress reporting, and manages checkpointing.
+
+    Attributes:
+        config: Application configuration.
+        profiler: Performance profiler for timing phases.
+        output_dir: Directory for output files and indices.
+
+    Example:
+        >>> from codehierarchy.config.loader import load_config
+        >>> config = load_config()
+        >>> orchestrator = Orchestrator(config)
+        >>> results = orchestrator.run_pipeline(Path("/path/to/repo"))
+    """
+
+    def __init__(self, config: Config) -> None:
+        """
+        Initialize the orchestrator.
+
+        Args:
+            config: Application configuration containing system,
+                   parsing, LLM, and embedding settings.
+        """
         self.config = config
         self.profiler = Profiler()
         self.output_dir = config.system.output_dir
@@ -25,7 +68,22 @@ class Orchestrator:
 
     def run_pipeline(self, repo_path: Path) -> Dict[str, Any]:
         """
-        Run the full analysis pipeline.
+        Run the full analysis pipeline on a repository.
+
+        Executes all pipeline phases in sequence: scan, parse, graph,
+        summarize, and index. Supports checkpointing for resumable runs.
+
+        Args:
+            repo_path: Path to the repository to analyze.
+
+        Returns:
+            Dictionary containing:
+            - graph: The built code graph (NetworkX DiGraph)
+            - summaries: Dict mapping node IDs to summary text
+            - builder: The graph builder instance
+
+        Note:
+            Returns empty dict if no files are found to process.
         """
         logging.info(f"Starting analysis of {repo_path}")
 

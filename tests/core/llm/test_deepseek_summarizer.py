@@ -10,7 +10,12 @@ def mock_openai():
 
 def test_summarize_batch(mock_openai):
     config = LLMConfig()
-    with patch('codehierarchy.core.llm.lmstudio_summarizer.ModelManager') as MockManager:
+    with patch('codehierarchy.core.llm.lmstudio_summarizer.create_backend') as mock_factory:
+        mock_backend = MagicMock()
+        mock_backend.setup.return_value = None
+        mock_backend.load_model.return_value = "test-model"
+        mock_backend.base_url = "http://localhost:1234/v1"
+        mock_factory.return_value = mock_backend
         summarizer = LMStudioSummarizer(config, "System Prompt")
     
     # Mock builder and context
@@ -39,7 +44,12 @@ def test_parse_batch_response():
     # Mock OpenAI client creation in init
     # Mock OpenAI client creation in init
     with patch('codehierarchy.core.llm.lmstudio_summarizer.OpenAI'), \
-         patch('codehierarchy.core.llm.lmstudio_summarizer.ModelManager'):
+         patch('codehierarchy.core.llm.lmstudio_summarizer.create_backend') as mock_factory:
+        mock_backend = MagicMock()
+        mock_backend.setup.return_value = None
+        mock_backend.load_model.return_value = "test-model"
+        mock_backend.base_url = "http://localhost:1234/v1"
+        mock_factory.return_value = mock_backend
         summarizer = LMStudioSummarizer(config, "")
     
     response = """

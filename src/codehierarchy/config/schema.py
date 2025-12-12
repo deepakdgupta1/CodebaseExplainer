@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List, Literal
+from typing import List, Literal, Optional
 
 from pydantic import BaseModel, Field
 
@@ -72,7 +72,47 @@ class GraphConfig(BaseModel):
     )
 
 
+class LMStudioConfig(BaseModel):
+    """Configuration specific to LM Studio backend."""
+    appimage_path: Optional[Path] = Field(
+        default=None,
+        description="Path to LM Studio AppImage (auto-detected if None)"
+    )
+    use_xvfb: bool = Field(
+        default=True,
+        description="Use xvfb-run for headless operation"
+    )
+    port: int = Field(
+        default=1234,
+        description="LM Studio server port"
+    )
+
+
+class LlamaCppConfig(BaseModel):
+    """Configuration specific to llama.cpp backend."""
+    server_path: str = Field(
+        default="llama-server",
+        description="Path to llama-server executable"
+    )
+    model_path: Optional[Path] = Field(
+        default=None,
+        description="Path to GGUF model file"
+    )
+    port: int = Field(
+        default=8080,
+        description="llama-server port"
+    )
+    n_gpu_layers: int = Field(
+        default=-1,
+        description="GPU layers (-1 = all)"
+    )
+
+
 class LLMConfig(BaseModel):
+    backend: Literal["lmstudio", "llamacpp"] = Field(
+        default="lmstudio",
+        description="LLM backend to use"
+    )
     model_name: str = Field(
         default="Qwen2.5-Coder-32B-Instruct.IQ4_XS.gguf",
         description="Model name in LM Studio"
@@ -147,6 +187,10 @@ class LLMConfig(BaseModel):
         default=True,
         description="Use mmap()"
     )
+
+    # Backend-specific configs
+    lmstudio: LMStudioConfig = Field(default_factory=LMStudioConfig)
+    llamacpp: LlamaCppConfig = Field(default_factory=LlamaCppConfig)
 
 
 class EmbeddingsConfig(BaseModel):

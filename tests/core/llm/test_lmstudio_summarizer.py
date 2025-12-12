@@ -38,9 +38,17 @@ def mock_builder():
 
 @pytest.fixture
 def mock_model_manager():
-    with patch("codehierarchy.core.llm.lmstudio_summarizer.ModelManager") as mock:
-        mock.return_value.load_model.return_value = True
-        yield mock
+    """Mock the create_backend factory to return a mock backend."""
+    with patch(
+        "codehierarchy.core.llm.lmstudio_summarizer.create_backend"
+    ) as mock_factory:
+        mock_backend = MagicMock()
+        mock_backend.setup.return_value = None
+        mock_backend.load_model.return_value = "test-model"
+        mock_backend.base_url = "http://localhost:1234/v1"
+        mock_backend.is_healthy.return_value = True
+        mock_factory.return_value = mock_backend
+        yield mock_factory
 
 class TestLMStudioSummarizer:
     
@@ -120,7 +128,8 @@ class TestLMStudioSummarizer:
 
     def test_init_load_model_failure(self, mock_config, mock_model_manager):
         """Test that summarizer is disabled if model load fails."""
-        mock_model_manager.return_value.load_model.return_value = False
+        # Set backend.load_model to return None (failure)
+        mock_model_manager.return_value.load_model.return_value = None
 
         with patch("codehierarchy.core.llm.lmstudio_summarizer.OpenAI"):
             summarizer = LMStudioSummarizer(mock_config, "Template")

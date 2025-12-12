@@ -29,15 +29,16 @@ graph:
   compute_metrics: true
 
 llm:
+  backend: "llamacpp"  # "llamacpp" or "lmstudio"
   model_name: "Qwen2.5-Coder-32B-Instruct.IQ4_XS.gguf"
-  base_url: "http://localhost:1234/v1"
-  api_key: "lm-studio"
+  base_url: "http://localhost:8080/v1"
+  api_key: "not-needed"
   context_window: 32768
   batch_size: 10
   temperature: 0.2
   timeout_seconds: 300
   max_retries: 2
-  # Advanced LM Studio Settings
+  # Advanced Settings
   context_overflow_policy: "stopAtLimit"
   top_k: 40
   repeat_penalty: 1.1
@@ -48,6 +49,19 @@ llm:
   eval_batch_size: 8
   flash_attention: false
   use_mmap: true
+
+  # LM Studio specific
+  lmstudio:
+    appimage_path: null  # Auto-detect
+    use_xvfb: true
+    port: 1234
+
+  # llama.cpp specific
+  llamacpp:
+    server_path: "llama-server"
+    model_path: null  # Set to your .gguf path
+    port: 8080
+    n_gpu_layers: -1
 
 embeddings:
   model_name: "all-mpnet-base-v2"

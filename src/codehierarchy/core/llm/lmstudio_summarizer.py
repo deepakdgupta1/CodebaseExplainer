@@ -7,7 +7,7 @@ from openai import OpenAI, APIConnectionError, BadRequestError
 from codehierarchy.config.schema import LLMConfig
 from codehierarchy.analysis.graph.graph_builder import InMemoryGraphBuilder
 from .validator import validate_summary
-from .model_manager import ModelManager
+from .backends import create_backend, BaseLLMBackend
 from .progress import SummarizationProgressEvent
 
 # A callback that receives progress events emitted during summarization
@@ -15,22 +15,45 @@ ProgressCallback = Callable[[SummarizationProgressEvent], None]
 
 
 class LMStudioSummarizer:
+    """
+    Summarizer using configurable LLM backends.
+
+    Despite the name (kept for backward compatibility), this class
+    now supports both LM Studio and llama.cpp backends via the
+    backends.create_backend() factory.
+    """
+
     def __init__(self, config: LLMConfig, prompt_template: str):
         self.config = config
         self.prompt_template = prompt_template
-        self.client = OpenAI(base_url=config.base_url, api_key=config.api_key)
-        self.model = config.model_name
         self.enabled = True  # Flag to track if LLM is available
 
-        # Ensure model is loaded
-        self.model_manager = ModelManager(config)
-        loaded_id = self.model_manager.load_model()
+        # Create and setup backend based on config
+        self.backend: BaseLLMBackend = create_backend(config)
+        try:
+            self.backend.setup()
+        except RuntimeError as e:
+            logging.error(f"Backend setup failed: {e}")
+            self.enabled = False
+            self.model = config.model_name
+            self.client = OpenAI(base_url=config.base_url, api_key=config.api_key)
+            return
+
+        # Load model
+        loaded_id = self.backend.load_model()
         if loaded_id:
             self.model = loaded_id
             logging.info(f"Using model identifier: {self.model}")
         else:
-            logging.warning("Model failed to load. Summarization will be disabled.")
+            logging.warning("Model failed to load. Summarization disabled.")
             self.enabled = False
+            self.model = config.model_name
+
+        # Create OpenAI client using backend's base_url
+        self.client = OpenAI(
+            base_url=self.backend.base_url,
+            api_key=config.api_key
+        )
 
     def summarize_batch(
         self,

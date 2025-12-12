@@ -11,15 +11,15 @@ from codehierarchy.core.pipeline.orchestrator import Orchestrator
 from codehierarchy.core.llm.lmstudio_summarizer import (
     LMStudioSummarizer
 )
-from codehierarchy.core.search.embedder import Embedder
-from codehierarchy.core.search.search_engine import SearchEngine
+from codehierarchy.core.search.embedder import HighQualityEmbedder
+from codehierarchy.core.search.search_engine import EnterpriseSearchEngine
 from codehierarchy.core.search.keyword_search import KeywordSearch
 
 __all__ = [
     # Re-export key classes for convenience
     "Orchestrator",
     "LMStudioSummarizer",
-    "Embedder",
-    "SearchEngine",
+    "HighQualityEmbedder",
+    "EnterpriseSearchEngine",
     "KeywordSearch",
 ]

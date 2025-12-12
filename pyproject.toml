@@ -56,7 +56,23 @@ warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
 check_untyped_defs = true
+exclude = "^(tests/|docs/|output/|scripts/|src/)"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
+
+[tool.flake8]
+exclude = [
+    ".venv",
+    "build",
+    "dist",
+    "docs",
+    "output",
+    "tests",
+    "scripts",
+    "src"
+]
+# You can also ignore specific error codes entirely
+# ignore = ["E501", "W503"] 
+# max-line-length = 120 

@@ -8,7 +8,7 @@
 
 ## Component Details
 
-### File: `/tmp/claude-dementia/server.py`
+### File: `/home/deeog/Desktop/claude-dementia/server.py`
 
 #### class `Config`
 
@@ -90,7 +90,7 @@ No summary available.
 
 ---
 
-### File: `/tmp/claude-dementia/verify_local.py`
+### File: `/home/deeog/Desktop/claude-dementia/verify_local.py`
 
 #### function `verify`
 

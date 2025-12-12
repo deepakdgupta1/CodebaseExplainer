@@ -43,7 +43,7 @@ llm:
   repeat_penalty: 1.1
   min_p: 0.05
   top_p: 0.95
-  gpu_offload_ratio: 1.0
+  gpu_offload_ratio: 0.0
   cpu_threads: 4
   eval_batch_size: 8
   flash_attention: false

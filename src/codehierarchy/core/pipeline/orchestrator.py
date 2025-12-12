@@ -1,3 +1,4 @@
+from codehierarchy.core.llm.progress import SummarizationProgressEvent
 from typing import Any, Dict
 from pathlib import Path
 import logging
@@ -29,30 +30,50 @@ class Orchestrator:
         logging.info(f"Starting analysis of {repo_path}")
 
         # Phase 1: Scan
+        logging.info(
+            f"Starting phase: Scan | Input: {repo_path}"
+        )
         self.profiler.start_phase("scan")
         scanner = FileScanner(self.config.parsing)
         files = scanner.scan_directory(repo_path)
         self.profiler.end_phase("scan", {'files_found': len(files)})
+        logging.info(f"Completed phase: Scan | Output: {len(files)} files found")
 
         if not files:
             logging.error("No files found to process.")
             return {}
 
         # Phase 2: Parse
+        logging.info(f"Starting phase: Parse | Input: {len(files)} files")
         self.profiler.start_phase("parse")
         parser = ParallelParser(self.config.parsing.num_workers)
         parse_results = parser.parse_repository(files)
         self.profiler.end_phase("parse", {'files_parsed': len(parse_results)})
+        logging.info(
+            f"Completed phase: Parse | "
+            f"Output: {len(parse_results)} successful parses"
+        )
 
         # Phase 3: Graph
+        logging.info(
+            f"Starting phase: Graph | "
+            f"Input: {len(parse_results)} parse results"
+        )
         self.profiler.start_phase("graph")
         builder = InMemoryGraphBuilder()
         graph = builder.build_from_results(parse_results)
+        node_count = graph.number_of_nodes()
+        edge_count = graph.number_of_edges()
         self.profiler.end_phase("graph",
-                                {'nodes': graph.number_of_nodes(),
-                                 'edges': graph.number_of_edges()})
+                                {'nodes': node_count,
+                                 'edges': edge_count})
+        logging.info(
+            f"Completed phase: Graph | "
+            f"Output: {node_count} nodes, {edge_count} edges"
+        )
 
         # Phase 4: Summarize
+        logging.info("Starting phase: Summarize | Input: Graph nodes")
         self.profiler.start_phase("summarize")
         prompt = load_prompt_template("deepseek-optimized")
         summarizer = LMStudioSummarizer(self.config.llm, prompt)
@@ -60,42 +81,70 @@ class Orchestrator:
         node_ids = list(graph.nodes())
         summaries = {}
 
-        # Check for checkpoint
         checkpoint_file = self.output_dir / "checkpoints" / "summaries.json"
         if self.config.system.checkpointing_enabled and checkpoint_file.exists():
             summaries = load_checkpoint(checkpoint_file)
-            logging.info(f"Loaded {len(summaries)} summaries from checkpoint")
-            # Filter out nodes already summarized
             node_ids = [nid for nid in node_ids if nid not in summaries]
 
         batch_size = self.config.llm.batch_size
         total_nodes = len(node_ids)
+        total_batches = (total_nodes + batch_size - 1) // batch_size
 
         if total_nodes > 0:
-            with Progress() as progress:
-                task = progress.add_task(
-                    "[cyan]Summarizing...", total=total_nodes)
+            from time import time
+            last_event = time()
 
-                for i in range(0, total_nodes, batch_size):
-                    batch = node_ids[i:i + batch_size]
-                    batch_summaries = summarizer.summarize_batch(
-                        batch, builder)
-                    summaries.update(batch_summaries)
-                    progress.update(task, advance=len(batch))
+        def on_progress(event: SummarizationProgressEvent):
+            nonlocal last_event
+            last_event = time()
+            if event.phase == "node_validated":
+                progress.update(task, advance=1)
+            elif event.phase == "llm_call_start":
+                progress.console.print(f"[yellow]Batch {event.batch_index+1}/{total_batches}: LLM started")
+            elif event.phase == "llm_call_success":
+                progress.console.print(f"[green]Batch {event.batch_index+1} done ({event.extra.get('elapsed', 0):.1f}s)")
+            elif event.phase == "llm_call_error":
+                progress.console.print(f"[red]LLM error: {event.message}")
+            elif event.phase == "disabled":
+                progress.console.print("[bold red]Summarizer disabled")
 
-                    # Save checkpoint
-                    if self.config.system.checkpointing_enabled and (
-                            i // batch_size) % self.config.system.checkpoint_interval == 0:
-                        save_checkpoint(summaries, checkpoint_file)
+        with Progress() as progress:
+            task = progress.add_task("[cyan]Summarizing...", total=total_nodes)
 
-            # Final checkpoint
+            for i in range(0, total_nodes, batch_size):
+                batch = node_ids[i:i + batch_size]
+                batch_summaries = summarizer.summarize_batch(
+                    batch,
+                    builder,
+                    progress_cb=on_progress,
+                    batch_index=i // batch_size,
+                    total_batches=total_batches,
+                    completed_so_far=len(summaries),
+                    total_nodes=total_nodes,
+                )
+                summaries.update(batch_summaries)
+
+                # Save checkpoint
+                should_checkpoint = (
+                    (i // batch_size) %
+                    self.config.system.checkpoint_interval == 0
+                )
+                if self.config.system.checkpointing_enabled and should_checkpoint:
+                    save_checkpoint(summaries, checkpoint_file)
+
             if self.config.system.checkpointing_enabled:
                 save_checkpoint(summaries, checkpoint_file)
-
         self.profiler.end_phase("summarize",
                                 {'summaries_generated': len(summaries)})
+        logging.info(
+            f"Completed phase: Summarize | "
+            f"Output: {len(summaries)} summaries generated"
+        )
 
         # Phase 5: Index
+        logging.info(
+            f"Starting phase: Index | Input: {len(summaries)} summaries"
+        )
         self.profiler.start_phase("index")
         index_dir = self.output_dir / "index"
 
@@ -111,6 +160,9 @@ class Orchestrator:
         keyword_search.index_data(summaries, nodes_data)
 
         self.profiler.end_phase("index")
+        logging.info(
+            f"Completed phase: Index | Output: Index saved to {index_dir}"
+        )
 
         # Save metrics
         self.profiler.save_metrics(

@@ -76,132 +76,177 @@ This document describes the architecture for extracting two independent, reusabl
 ┌─────────────────────────────────────────────────────────────────┐
 │                    CONTENT INTELLIGENCE SERVICE                  │
 ├─────────────────────────────────────────────────────────────────┤
-│  API Layer                                                       │
-│  ├── POST /v1/content/ingest      (submit content)              │
-│  ├── GET  /v1/content/{id}        (retrieve processed)          │
-│  ├── POST /v1/embeddings/search   (similarity search)           │
-│  ├── GET  /v1/graph/{id}/nodes    (graph traversal)             │
-│  └── POST /v1/jobs                (async processing)            │
+│  Multi-Stage Retrieval Pipeline                                  │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐           │
+│  │Query Analysis│─▶│Hybrid Search │─▶│Cross-Encoder │           │
+│  │& Expansion   │  │(FAISS+BM25)  │  │  Reranking   │           │
+│  └──────────────┘  └──────────────┘  └──────────────┘           │
+│         │                │ RRF              │ top-10            │
+│         ▼                ▼ fusion           ▼ scores            │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐           │
+│  │Symbol Extract│  │  top-50      │  │ Dependency   │           │
+│  │Intent Detect │  │  candidates  │  │  Expansion   │           │
+│  └──────────────┘  └──────────────┘  └──────────────┘           │
+│                                            │ depth=2            │
+│                                            ▼                    │
+│                                      ┌──────────────┐           │
+│                                      │Completeness  │           │
+│                                      │  Scoring     │           │
+│                                      └──────────────┘           │
 ├─────────────────────────────────────────────────────────────────┤
 │  Processing Pipeline                                             │
-│  ┌──────────┐  ┌─────────┐  ┌──────────┐  ┌──────────┐          │
-│  │ Ingester │─▶│ Parser  │─▶│ Chunker  │─▶│ Embedder │          │
-│  └──────────┘  └─────────┘  └──────────┘  └────┬─────┘          │
-│                     │                          │                 │
-│                     ▼                          ▼                 │
-│               ┌───────────┐              ┌───────────┐           │
-│               │   Graph   │              │  Vector   │           │
-│               │  Builder  │              │  Index    │           │
-│               └───────────┘              └───────────┘           │
+│  ┌────────────┐  ┌─────────────┐  ┌────────────┐                │
+│  │ AST Parser │─▶│ AST-Aware   │─▶│ Dual       │                │
+│  │(tree-sitter)│  │  Chunker    │  │ Embedder   │                │
+│  └────────────┘  └─────────────┘  └────────────┘                │
+│        │                               │                        │
+│        ▼                               ▼                        │
+│  ┌─────────────┐              ┌────────────────┐                │
+│  │ Dependency  │              │  Hybrid Index  │                │
+│  │   Graph     │              │ (FAISS + BM25) │                │
+│  │(red-green)  │              └────────────────┘                │
+│  └─────────────┘                                                │
 ├─────────────────────────────────────────────────────────────────┤
 │  Storage Layer                                                   │
-│  ├── PostgreSQL     (metadata, job state)                       │
-│  ├── Qdrant/FAISS   (vector embeddings)                         │
-│  ├── Neo4j/NetworkX (relationship graphs)                       │
-│  └── Object Storage (raw content, artifacts)                    │
+│  ├── FAISS HNSW     (dense vectors, CodeBERT 768d)              │
+│  ├── BM25 Index     (sparse, inverted index for keywords)       │
+│  ├── SQLite         (AST cache, metadata, fingerprints)         │
+│  ├── NetworkX       (dependency graph with gpickle)             │
+│  └── Object Storage (raw content, large files)                  │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-### 3.2 API Contracts
+### 3.2 Key Algorithms
 
-#### Ingest Content
-```yaml
-POST /v1/content/ingest
-Request:
-  source_type: "file" | "url" | "text" | "stream"
-  content: string | binary
-  metadata:
-    source_id: string
-    content_type: string
-    tags: string[]
-  options:
-    parse_mode: "code" | "document" | "auto"
-    chunk_size: int (default: 1000)
-    overlap: int (default: 200)
-    generate_embeddings: bool (default: true)
-    build_graph: bool (default: true)
-
-Response:
-  job_id: string
-  status: "queued" | "processing" | "completed" | "failed"
-  content_id: string
+#### Hybrid Search with RRF Fusion
+```python
+def hybrid_search(query: str, k: int = 20, alpha: float = 0.5):
+    # Dense vector search (CodeBERT)
+    vector_results = faiss_index.search(embed(query), k=50)
+    # Sparse keyword search (BM25)
+    bm25_results = bm25_index.search(tokenize(query), k=50)
+    # Reciprocal Rank Fusion
+    fused = {}
+    for rank, (id, _) in enumerate(vector_results):
+        fused[id] = alpha * (1 / (60 + rank + 1))
+    for rank, (id, _) in enumerate(bm25_results):
+        fused[id] = fused.get(id, 0) + (1-alpha) * (1 / (60 + rank + 1))
+    return sorted(fused.items(), key=lambda x: x[1], reverse=True)[:k]
 ```
 
-#### Retrieve Embeddings
+#### Cross-Encoder Reranking
+- Model: `cross-encoder/ms-marco-MiniLM-L-12-v2`
+- Process query + document jointly (20-40% accuracy gain)
+- Latency: 200-400ms for 50 chunks on CPU
+
+#### Completeness Scoring
+```
+Completeness = 0.7 * symbol_resolution + 0.3 * dependency_coverage
+Target: >0.90
+```
+
+### 3.3 Enhanced API Contracts
+
+#### Context Query (Primary API)
 ```yaml
-POST /v1/embeddings/search
+POST /v1/context/query
 Request:
   query: string
-  top_k: int (default: 10)
-  filters:
-    source_ids: string[]
-    content_types: string[]
-  include_metadata: bool
+  context:
+    current_file: string (optional)
+    cursor_line: int (optional)
+  options:
+    max_tokens: int (default: 4096)
+    min_completeness: float (default: 0.9)
+    dependency_depth: int (default: 2)
 
 Response:
-  results:
-    - content_id: string
-      chunk_id: string
-      score: float
-      text: string
-      metadata: object
+  context_id: string
+  token_count: int
+  completeness_score: float
+  retrieval_time_ms: int
+  chunks:
+    - file: string
+      lines: string
+      relevance_score: float
+      symbol: string
+      content: string
+      dependencies: string[]
+  dependency_tree: object
+  metadata:
+    retrieval_stages:
+      hybrid_search_ms: int
+      reranking_ms: int
+      dependency_expansion_ms: int
 ```
 
-#### Graph Queries
+#### Incremental Update (Red-Green Marking)
 ```yaml
-GET /v1/graph/{content_id}/nodes?type=function&depth=2
+POST /v1/context/update
+Request:
+  action: "modify" | "create" | "delete"
+  file_path: string
+  content: string
 
 Response:
-  nodes:
-    - id: string
-      type: string
-      name: string
-      metadata: object
-      relationships:
-        parents: string[]
-        children: string[]
+  status: "updated"
+  reindexed_chunks: int
+  dirty_nodes: int
+  processing_time_ms: int
 ```
 
 ### 3.3 Data Models
 
 ```python
-# Core Entities
-class ContentRecord:
-    id: UUID
-    source_type: str
-    source_uri: str
-    content_hash: str  # For dedup/updates
-    status: ProcessingStatus
-    created_at: datetime
-    updated_at: datetime
-
-class Chunk:
-    id: UUID
-    content_id: UUID
-    sequence: int
-    text: str
-    start_offset: int
-    end_offset: int
-    metadata: dict
-
-class Embedding:
-    chunk_id: UUID
-    vector: np.ndarray  # 768 or 1536 dims
-    model_version: str
-
-class GraphNode:
-    id: str  # file:name:line
-    content_id: UUID
-    node_type: str
-    name: str
-    properties: dict
+@dataclass
+class CodeChunk:
+    chunk_id: str
+    file_path: str
+    start_line: int
+    end_line: int
+    chunk_type: str  # function|class|module
+    symbol_name: str
+    signature: str
+    content: str
     
-class GraphEdge:
-    source_id: str
-    target_id: str
-    edge_type: str
-    weight: float
+    # Dual embeddings
+    dense_embedding: np.ndarray  # CodeBERT 768d
+    tokens: List[str]            # For BM25
+    
+    # Dependencies
+    imports: List[str]
+    calls: List[str]
+    inherits: List[str]
+    
+    # Metadata
+    complexity: int
+    fingerprint: str  # SHA-256 for incremental updates
+    last_modified: datetime
 ```
+
+### 3.5 Performance Targets
+
+| Metric | Target |
+|--------|--------|
+| Hybrid search | 80-150ms |
+| Cross-encoder rerank | 200-400ms |
+| **Total query latency** | **350-700ms** |
+| Incremental update | <1s/file |
+| Token savings | 90-95% |
+| Completeness | >0.90 |
+| Precision@10 | >0.85 |
+
+### 3.6 Technology Stack
+
+| Component | Technology |
+|-----------|------------|
+| Embeddings | `microsoft/codebert-base` (768d) |
+| Reranker | `ms-marco-MiniLM-L-12-v2` |
+| Vector DB | FAISS HNSW (M=16, ef=200) |
+| Sparse Index | BM25 (rank-bm25) |
+| AST Parser | tree-sitter |
+| Graph | NetworkX + gpickle |
+| Cache | SQLite |
 
 ---
 

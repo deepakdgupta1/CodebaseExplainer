@@ -10,7 +10,16 @@ from codehierarchy.utils.logger import setup_logging
 
 @click.group()
 def cli() -> None:
-    """CodeHierarchy Explainer CLI"""
+    """
+    CodeHierarchy Explainer CLI.
+
+    Analyze and query your codebase using LLMs and semantic search.
+
+    \b
+    Common Commands:
+      analyze   Parse and summarize a repository
+      search    Query the knowledge base
+    """
     pass
 
 
@@ -30,7 +39,23 @@ def analyze(
         config_path: str,
         output_dir: str,
         verbose: bool) -> None:
-    """Analyze a repository and generate documentation."""
+    """
+    Analyze a repository and generate documentation.
+
+    This command runs the full analysis pipeline:
+    1. Scans the repository for supported files
+    2. Parses code into ASTs and dependency graphs
+    3. Generates summaries using the configured LLM
+    4. Indexes content for search
+
+    \b
+    Examples:
+      # Analyze current directory
+      codehierarchy analyze .
+
+      # Analyze with specific config and output
+      codehierarchy analyze /path/to/repo --config config.yaml --output ./docs
+    """
     setup_logging(verbose)
 
     try:
@@ -67,7 +92,19 @@ def analyze(
                                  'hybrid']),
               default='hybrid')
 def search(query: str, index_dir: str, mode: str) -> None:
-    """Search the codebase knowledge base."""
+    """
+    Search the codebase knowledge base.
+
+    Perform semantic, keyword, or hybrid search on the indexed codebase.
+
+    \b
+    Examples:
+      # Hybrid search (default)
+      codehierarchy search "how does auth work" --index-dir ./output/index
+
+      # Semantic search only
+      codehierarchy search "authentication flow" --index-dir ./output/index --mode semantic
+    """
     try:
         engine = EnterpriseSearchEngine(Path(index_dir))
         results = engine.search(query, mode=mode)

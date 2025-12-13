@@ -1,176 +1,50 @@
 # CodeHierarchy Explainer
 
-A high-performance codebase documentation and search system powered by LM Studio compatible LLMs.
+A high-performance codebase documentation and search system.
 
-## Overview
+## Architecture Evolution
 
-CodeHierarchy Explainer analyzes your codebase to generate comprehensive documentation and provide a powerful semantic search interface. It uses:
-- **Tree-Sitter** for robust parsing of Python and TypeScript.
-- **LM Studio** with LLMs like Qwen2.5-Coder for generating high-quality summaries of code components.
-- **NetworkX** for building a dependency graph of your code.
-- **FAISS & MPNet** for state-of-the-art semantic search.
-- **Rich & Click** for a beautiful CLI experience.
+This project is evolving from a monolithic CLI tool into a set of loosely coupled platform services.
 
-## Features
+### Platform Services (New)
 
-- 🚀 **Fast Analysis**: Parallel parsing and optimized graph building.
-- 🧠 **AI Summaries**: Context-aware summaries using Large Language Models.
-- 🔍 **Hybrid Search**: Combine keyword (BM25) and semantic (Vector) search for best results.
-- 📊 **Metrics**: Cyclomatic complexity, LOC, and centrality metrics.
-- 📄 **Markdown Output**: Generates a single, navigable markdown file of your entire codebase.
+Independent microservices for scalable deployment:
 
-## Installation
+- **[Content Intelligence Service (CIS)](services/content-intelligence)**:
+  - Hybrid search (FAISS + BM25)
+  - AST-aware chunking & dependency graph
+  - Incremental updates
 
-### Quick Setup (Recommended)
+- **[LLM Summarization Service (LSS)](services/llm-summarization)**:
+  - Multi-provider LLM support (OpenAI, Anthropic)
+  - Prompt registry & management
+  - Streaming summarization
 
-Use the provided setup script to create a virtual environment and install all dependencies:
+See [services/README.md](services/README.md) for deployment instructions.
 
-```bash
-git clone https://github.com/yourusername/codehierarchy-explainer.git
-cd codehierarchy-explainer
-./scripts/setup_venv.sh
-```
+### Legacy CLI Tool
 
-### Manual Setup
+The original monolithic CLI is still available for local, single-machine analysis.
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/yourusername/codehierarchy-explainer.git
-   cd codehierarchy-explainer
-   ```
+#### Features
+- **Fast Analysis**: Parallel parsing.
+- **AI Summaries**: Context-aware via LM Studio.
+- **Hybrid Search**: Combine keyword and semantic search.
+- **Metrics**: Complexity, LOC, centrality.
 
-2. Create and activate a virtual environment:
-   ```bash
-   python3 -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
-
-3. Install the package:
-   ```bash
-   pip install -e .
-   ```
-
-4. Install LM Studio from https://lmstudio.ai/ and load a compatible model (default: Qwen2.5-Coder-32B).
-
-**Note**: All configuration files are now bundled within the package. No external config directory is needed.
-
-## Quick Start
-
-### Analyze a Repository
-
-To generate documentation for a repository:
+#### Quick Start
 
 ```bash
+# Install
+pip install -e .
+
+# Analyze a repo
 codehierarchy analyze /path/to/repo --output ./output
-```
 
-This will:
-1. Scan and parse files.
-2. Build a dependency graph.
-3. Generate summaries using the LLM.
-4. Create a search index.
-5. Output `CODEBASE_EXPLAINER.md` in the output directory.
-
-### Search the Codebase
-
-Once analyzed, you can search the knowledge base:
-
-```bash
+# Search
 codehierarchy search "how does the parser work?" --index-dir ./output/index
 ```
 
 ## Configuration
 
-You can customize the behavior by creating a `config.yaml` file. See `src/codehierarchy/config/config.yaml` for defaults.
-
-```yaml
-system:
-  max_memory_gb: 26.0
-
-llm:
-  model_name: "Qwen2.5-Coder-32B-Instruct.IQ4_XS.gguf"
-  base_url: "http://localhost:1234/v1"
-  api_key: "lm-studio"
-  batch_size: 10
-  temperature: 0.2
-  timeout_seconds: 300
-  max_retries: 2
-  # Advanced LM Studio Settings
-  context_overflow_policy: "stopAtLimit"
-  top_k: 40
-  repeat_penalty: 1.1
-  min_p: 0.05
-  top_p: 0.95
-  gpu_offload_ratio: 1.0
-  cpu_threads: 4
-  eval_batch_size: 8
-  flash_attention: false
-  use_mmap: true
-
-embeddings:
-  model_name: "all-mpnet-base-v2"
-  dimension: 768
-  batch_size: 32
-```
-
-Pass it to the CLI:
-```bash
-codehierarchy analyze /path/to/repo --config my_config.yaml
-```
-
-## Architecture
-
-The system is organized into functional groups for better maintainability:
-
-### Package Structure
-
-```
-codehierarchy/
-├── analysis/           # Code analysis and parsing
-│   ├── parser/        # AST parsing with Tree-sitter
-│   ├── scanner/       # File system scanning
-│   └── graph/         # Dependency graph construction
-├── core/              # Core pipeline functionality
-│   ├── pipeline/      # Orchestration logic
-│   ├── llm/           # LLM integration and summarization
-│   └── search/        # Semantic and keyword search
-├── interface/         # User-facing interfaces
-│   ├── cli/           # Command-line interface
-│   └── output/        # Markdown and report generation
-├── config/            # Configuration management
-└── utils/             # Shared utilities
-```
-
-### Pipeline Flow
-
-1. **Scanner**: Discovers relevant files using `analysis.scanner`
-2. **Parser**: Extracts AST nodes and call graphs using `analysis.parser`
-3. **Graph Builder**: Constructs dependency graph using `analysis.graph`
-4. **Summarizer**: Generates AI summaries using `core.llm`
-5. **Indexer**: Builds search indices using `core.search`
-6. **Generator**: Produces documentation using `interface.output`
-
-### Import Examples
-
-```python
-# New structure imports
-from codehierarchy.analysis.parser import TreeSitterParser
-from codehierarchy.core.llm import LMStudioSummarizer
-from codehierarchy.interface.cli import main
-
-# Backward-compatible imports (convenience)
-from codehierarchy import TreeSitterParser, LMStudioSummarizer
-```
-
-## Performance Targets
-
-| Metric | Target |
-|--------|--------|
-| RAM Usage | < 26GB |
-| Processing Time (1M LOC) | ~30 mins |
-| Search Latency | < 100ms |
-
-## Troubleshooting
-
-- **LM Studio Connection Error**: Ensure LM Studio is running with a model loaded at `http://localhost:1234`.
-- **Memory Issues**: Reduce `llm.batch_size` or `parsing.num_workers` in config.
+See [src/codehierarchy/config/schema.py](src/codehierarchy/config/schema.py) for all configuration options.

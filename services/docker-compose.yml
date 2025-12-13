@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  # Content Intelligence Service
+  cis:
+    build:
+      context: ./services/content-intelligence
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8080"
+    volumes:
+      - cis-cache:/app/.context_cache
+    environment:
+      - LOG_LEVEL=info
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # LLM Summarization Service  
+  lss:
+    build:
+      context: ./services/llm-summarization
+      dockerfile: Dockerfile
+    ports:
+      - "8082:8080"
+    environment:
+      - LLM_BASE_URL=${LLM_BASE_URL:-http://llm:8080/v1}
+      - LLM_MODEL=${LLM_MODEL:-local-model}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Local LLM server (optional - llama.cpp)
+  llm:
+    image: ghcr.io/ggerganov/llama.cpp:server
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./models:/models
+    command: >
+      -m /models/model.gguf
+      --host 0.0.0.0
+      --port 8080
+      -ngl 99
+    profiles:
+      - local-llm
+
+volumes:
+  cis-cache:

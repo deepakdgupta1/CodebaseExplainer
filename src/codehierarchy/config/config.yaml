@@ -52,14 +52,14 @@ llm:
 
   # LM Studio specific
   lmstudio:
-    appimage_path: null  # Auto-detect
+    appimage_path: "/home/deeog/Desktop/LMStudio.AppImage"  # Auto-detect
     use_xvfb: true
     port: 1234
 
   # llama.cpp specific
   llamacpp:
-    server_path: "llama-server"
-    model_path: null  # Set to your .gguf path
+    server_path: "/home/deeog/Desktop/llama.cpp/build/bin/llama-server"
+    model_path: "/home/deeog/.lmstudio/models/custom_user/qwen2.5-coder-32b-custom/Qwen2.5-Coder-32B-Instruct.IQ4_XS.gguf"
     port: 8080
     n_gpu_layers: -1
 

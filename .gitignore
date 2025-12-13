@@ -41,7 +41,7 @@ htmlcov/
 
 # Project specific
 .codehierarchy/
-/output/
+output/
 test_output/
 demo_output/
 *.log

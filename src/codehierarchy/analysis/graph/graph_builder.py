@@ -48,7 +48,9 @@ class InMemoryGraphBuilder:
                     name=node.name,
                     file=file_str,
                     line=node.line,
-                    end_line=node.end_line
+                    end_line=node.end_line,
+                    complexity=node.complexity,
+                    loc=node.loc
                 )
 
                 # Cache content

@@ -54,15 +54,11 @@ class MarkdownGenerator:
                             'name',
                             'unnamed')}`\n")
                 content.append(f"- **Location**: Line {node.get('line', '?')}")
-                # Add complexity if available
-                # We need to access metadata which is not in graph node data directly in my implementation?
-                # Wait, graph_builder puts metadata in self.metadata, not node attributes?
-                # Let's check graph_builder.py
-                # It adds attributes: type, name, file, line, end_line.
-                # Metadata is separate.
-                # So I can't access complexity here unless I pass metadata or put it in graph.
-                # I should have put it in graph attributes too.
-                # But for now, I'll skip complexity in MD or rely on summary.
+                
+                if 'complexity' in node:
+                    content.append(f"- **Complexity**: {node['complexity']}")
+                if 'loc' in node:
+                    content.append(f"- **LOC**: {node['loc']}")
 
                 content.append(f"\n{summary}\n")
 

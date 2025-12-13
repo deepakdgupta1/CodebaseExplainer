@@ -166,7 +166,7 @@ from codehierarchy import TreeSitterParser, LMStudioSummarizer
 
 | Metric | Target |
 |--------|--------|
-| RAM Usage | < 12GB |
+| RAM Usage | < 26GB |
 | Processing Time (1M LOC) | ~30 mins |
 | Search Latency | < 100ms |
 

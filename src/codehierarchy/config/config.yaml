@@ -29,7 +29,7 @@ graph:
   compute_metrics: true
 
 llm:
-  backend: "llamacpp"  # "llamacpp" or "lmstudio"
+  backend: "llamacpp"  # "llamacpp" or "lmstudio". NOTE: lmstudio is not tested yet.
   model_name: "Qwen2.5-Coder-32B-Instruct.IQ4_XS.gguf"
   base_url: "http://localhost:8080/v1"
   api_key: "not-needed"
